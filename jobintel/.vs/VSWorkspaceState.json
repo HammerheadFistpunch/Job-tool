@@ -1,7 +1,11 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\backend",
+    "\\backend\\ai",
+    "\\backend\\jobs",
+    "\\backend\\pipeline"
   ],
-  "SelectedNode": "\\jobintel.db",
+  "SelectedNode": "\\__pycache__",
   "PreviewInSolutionExplorer": false
 }
