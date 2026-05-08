@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+sentence-transformers
+chromadb
+python-docx
+pandas
+openpyxl
+ollama
