@@ -1,11 +1,11 @@
 {
   "ExpandedNodes": [
     "",
-    "\\backend",
-    "\\backend\\ai",
-    "\\backend\\jobs",
-    "\\backend\\pipeline"
+    "\\backend\\documents",
+    "\\data",
+    "\\data\\generated",
+    "\\data\\input"
   ],
-  "SelectedNode": "\\__pycache__",
+  "SelectedNode": "\\data\\input\\docs",
   "PreviewInSolutionExplorer": false
 }

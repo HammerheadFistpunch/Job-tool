@@ -20,6 +20,6 @@ class Job(Base):
 
     source_url = Column(String)
 
-    smi_score = Column(Float)
+    similarity_score = Column(Float)
 
     status = Column(String, default="discovered")
