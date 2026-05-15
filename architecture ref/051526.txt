@@ -1,0 +1,51 @@
+/jobintel
+    /backend
+        /ai
+            embedding_engine.py
+            similarity_engine.py
+            llm_client.py
+            semantic_ranker.py
+
+        /documents
+            resume_builder.py
+            cover_letter_builder.py
+
+        /jobs
+            models.py
+            parser.py
+            sources/
+
+        /pipeline
+            ingestion_pipeline.py
+            scoring_pipeline.py
+            filtering_pipeline.py
+
+        /profiles
+            profile_loader.py
+            profile_schema.py
+
+        /storage
+            database.py
+            models.py
+            repositories/
+
+        /telemetry
+            logger.py
+            runtime_events.py
+
+    /config
+        settings.py
+
+    /data
+        /profiles
+            career_profile.md
+            exclusions.md
+            preferences.md
+            strengths.md
+
+    /logs
+
+    SYSTEM_CONTEXT.md
+    README.md
+    requirements.txt
+    main.py
