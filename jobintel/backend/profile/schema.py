@@ -1,10 +1,10 @@
-def normalize_profile(profile):
-    metadata = profile["metadata"]
+from dataclasses import dataclass
 
-    return {
-        "target_roles": metadata.get("target_roles", []),
-        "semantic_roles": metadata.get("semantic_roles", []),
-        "industries": metadata.get("industries", []),
-        "salary": metadata.get("salary", {}),
-        "content": profile["content"]
-    }
+
+@dataclass
+class CandidateProfile:
+    goals: list[str]
+    strengths: list[str]
+    preferred_roles: list[str]
+    exclusions: list[str]
+    work_preferences: list[str]
