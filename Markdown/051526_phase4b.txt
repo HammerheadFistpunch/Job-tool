@@ -1,0 +1,33 @@
+# JobIntel — Phase 4B: Intent-Aware Matching Layer
+
+## Date
+2026-05-15
+
+---
+
+# 🧠 SUMMARY
+
+Phase 4B represents a structural correction to the system.
+
+Instead of treating the profile as:
+> raw text → embeddings → similarity matching
+
+We now treat it as:
+> **career intent → structured identity model → guided ranking**
+
+---
+
+# ❗ PROBLEM IDENTIFIED
+
+Earlier system behavior showed:
+
+- Over-indexing on data/AI/engineering roles
+- Weak alignment with strategic / communication-heavy profiles
+- Skill extraction bias dominating ranking
+- Profile treated as unstructured text instead of intent
+
+---
+
+# 🧩 KEY ARCHITECTURAL SHIFT
+
+## BEFORE (Phase 4–5)
