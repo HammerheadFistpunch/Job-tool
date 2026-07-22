@@ -22,17 +22,29 @@ Build an automated, local-first job intelligence system optimized for:
 - AI-independent collection command suitable for scheduling.
 - Unit coverage for complete records, errors, deduplication, updates, and runs.
 
+## Completed: Data-definition preparation
+
+- Added `docs/JOB_TOOL_DATA_INTAKE.md`, a human-editable worksheet separating
+  eligibility rules, ranking preferences, candidate evidence, and job inputs.
+- Added `docs/JOB_TOOL_FUNCTION_MAP.md`, with editable Mermaid architecture
+  diagrams, component status, database flow, and the planned end state.
+- Established a conservative missing-data rule: ambiguous eligibility data
+  should normally produce `needs_review`, not an automatic rejection.
+- Deferred profile assumptions until Patrick completes the worksheet and
+  supplies the resume/job evidence to structure.
+
 ## Next: Structured candidate and eligibility model
 
-1. Replace the single profile text blob with separate factual facets:
+1. Complete and import the intake worksheet as the source of search rules.
+2. Replace the single profile text blob with separate factual facets:
    demonstrated experience, accomplishments, tools, industries, education,
    target titles, adjacent titles, seniority, location, compensation, work
    arrangement, preferences, and hard exclusions.
-2. Import factual career evidence from the existing profile and resume material.
-3. Add deterministic filters for geography, remote policy, absolute salary
+3. Import factual career evidence from supplied profile and resume material.
+4. Add deterministic filters for geography, remote policy, absolute salary
    floor, commission-only roles, junior/SDR roles, and required credentials.
-4. Store filter decisions and explanations without deleting filtered jobs.
-5. Add unit tests for every hard rule and ambiguous/missing source data.
+5. Store filter decisions and explanations without deleting filtered jobs.
+6. Add unit tests for every hard rule and ambiguous/missing source data.
 
 ## Then: Review queue and evaluation
 
@@ -69,5 +81,7 @@ Build an automated, local-first job intelligence system optimized for:
 
 ## Current next build chunk
 
-Structured candidate facets and deterministic eligibility filters. This should
-be completed before further tuning of semantic weights or skill extraction.
+Patrick completes `docs/JOB_TOOL_DATA_INTAKE.md`; then the application imports
+that worksheet and supplied resume evidence into structured candidate facets.
+Deterministic eligibility filters follow immediately. This must be completed
+before further tuning of semantic weights or skill extraction.
