@@ -1,0 +1,48 @@
+"""Collect and persist jobs without loading any AI models.
+
+Run with: ``python -m backend.collect_jobs``
+"""
+
+import logging
+
+from backend.jobs.job_aggregator import JobAggregator
+from backend.jobs.job_ingestion import JobIngestionPipeline
+from backend.storage.job_store import JobStore
+
+
+def collect() -> tuple[int, int]:
+    aggregator = JobAggregator()
+
+    with JobStore() as store:
+        run_id = store.start_collection_run()
+        try:
+            raw_jobs, errors = aggregator.fetch_all_jobs_with_report()
+            jobs = JobIngestionPipeline().load_from_list(raw_jobs)
+            summary = store.upsert_jobs(jobs)
+            store.finish_collection_run(run_id, summary, errors)
+        except Exception as error:
+            store.fail_collection_run(run_id, error)
+            raise
+
+    print(
+        "Collection complete: "
+        f"{summary.fetched} fetched, {summary.created} new, "
+        f"{summary.updated} updated, {summary.unchanged} unchanged, "
+        f"{len(errors)} source errors."
+    )
+    for error in errors:
+        print(
+            f"[WARN] {error.get('source')} {error.get('company')}: "
+            f"{error.get('error')}"
+        )
+    return summary.fetched, len(errors)
+
+
+def main() -> int:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    fetched, errors = collect()
+    return 1 if fetched == 0 and errors else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

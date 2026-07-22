@@ -43,7 +43,7 @@ def run_test():
     embedded_jobs = embedder.embed_jobs(jobs)
 
     # 4. Rank
-    engine = RankingEngine(profile_vector)
+    engine = RankingEngine(profile_vector, [])
     ranked = engine.rank_jobs(embedded_jobs)
 
     # 5. Output

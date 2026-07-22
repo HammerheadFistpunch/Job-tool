@@ -1,52 +1,17 @@
-from backend.ai.similarity_engine import calculate_similarity
+"""Compatibility entry point for persisting a manually supplied job."""
 
-from backend.jobs.models import Job
-from backend.jobs.sample_jobs import SAMPLE_JOB
-
-from backend.storage.database import SessionLocal
+from backend.storage.job_store import JobStore
 
 
-CAREER_REFERENCE = """
-MBA focused on leadership and strategy.
+def process_job(job_data: dict) -> None:
+    with JobStore() as store:
+        summary = store.upsert_jobs([job_data])
 
-Experienced in:
-- marketing
-- communications
-- creative production
-- journalism
-- video production
-- scripting
-- media creation
-- campaign strategy
-"""
-
-
-def process_job(job_data: dict):
-
-    similarity_score = calculate_similarity(
-        CAREER_REFERENCE,
-        job_data["description"]
-    )
-
-    db = SessionLocal()
-
-    job = Job(
-        company=job_data["company"],
-        title=job_data["title"],
-        location=job_data["location"],
-        description=job_data["description"],
-        source_url=job_data["source_url"],
-        smi_score=similarity_score,
-    )
-
-    db.add(job)
-    db.commit()
-
-    print("Job saved.")
-    print(f"Similarity Score: {similarity_score:.4f}")
-
-    db.close()
+    action = "saved" if summary.created else "updated" if summary.updated else "already current"
+    print(f"Job {action}.")
 
 
 if __name__ == "__main__":
+    from backend.jobs.sample_jobs import SAMPLE_JOB
+
     process_job(SAMPLE_JOB)

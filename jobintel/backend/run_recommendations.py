@@ -4,6 +4,7 @@ from backend.ai.embedding_service import generate_embedding
 from backend.ai.skill_extractor import SkillExtractor
 from backend.jobs.job_ingestion import JobIngestionPipeline
 from backend.ai.ranking_engine import RankingEngine
+from backend.storage.job_store import JobStore
 
 
 def load_profile():
@@ -26,12 +27,25 @@ def run():
 
     # jobs
     aggregator = JobAggregator()
-    raw_jobs = aggregator.fetch_all_jobs()
+    with JobStore() as store:
+        run_id = store.start_collection_run()
+        try:
+            raw_jobs, collection_errors = aggregator.fetch_all_jobs_with_report()
+            ingestion = JobIngestionPipeline()
+            collected_jobs = ingestion.load_from_list(raw_jobs)
+            summary = store.upsert_jobs(collected_jobs)
+            store.finish_collection_run(run_id, summary, collection_errors)
+            jobs = store.list_active_jobs()
+        except Exception as error:
+            store.fail_collection_run(run_id, error)
+            raise
 
-    print(f"[2] Jobs fetched: {len(raw_jobs)}")
-
-    ingestion = JobIngestionPipeline()
-    jobs = ingestion.load_from_list(raw_jobs)
+    print(
+        f"[2] Jobs fetched: {summary.fetched} | new: {summary.created} | "
+        f"updated: {summary.updated} | unchanged: {summary.unchanged}"
+    )
+    if collection_errors:
+        print(f"[WARN] Collection sources failed: {len(collection_errors)}")
 
     embedder = JobEmbeddingService()
     embedded_jobs = embedder.embed_jobs(jobs)
@@ -51,6 +65,8 @@ def run():
             f"Score: {job['score']:.4f} "
             f"Skills: {job['skills']}"
         )
+        if job.get("canonical_url"):
+            print(f"   {job['canonical_url']}")
 
     print("\n=== PIPELINE COMPLETE ===")
 

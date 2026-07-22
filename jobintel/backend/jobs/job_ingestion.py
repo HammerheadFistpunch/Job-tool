@@ -41,11 +41,17 @@ class JobIngestionPipeline:
 
         return {
             "id": job.get("id", ""),
+            "external_id": job.get("external_id", job.get("id", "")),
             "title": job.get("title", ""),
             "company": job.get("company", ""),
             "location": job.get("location", ""),
             "description": job.get("description", ""),
             "source": job.get("source", ""),
+            "canonical_url": job.get("canonical_url", job.get("source_url", "")),
+            "source_url": job.get("source_url", job.get("canonical_url", "")),
+            "posted_at": job.get("posted_at", ""),
+            "updated_at": job.get("updated_at", ""),
+            "raw": job.get("raw", job),
         }
 
     def get_jobs(self) -> List[Dict[str, Any]]:

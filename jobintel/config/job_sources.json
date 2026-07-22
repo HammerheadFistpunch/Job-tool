@@ -1,0 +1,19 @@
+{
+  "sources": [
+    {
+      "type": "greenhouse",
+      "company": "airbnb",
+      "enabled": true
+    },
+    {
+      "type": "greenhouse",
+      "company": "stripe",
+      "enabled": true
+    },
+    {
+      "type": "greenhouse",
+      "company": "dropbox",
+      "enabled": true
+    }
+  ]
+}

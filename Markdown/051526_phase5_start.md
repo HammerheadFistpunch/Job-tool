@@ -89,7 +89,7 @@ into:
 
 # 🚀 NEXT EVOLUTION STAGE
 
-## 1. Ranking Intelligence Upgrade (HIGH PRIORITY)
+## 1. Ranking Intelligence Upgrade (COMPLETED 2026-07-22)
 
 ### What will be added:
 - Weighted field scoring:
@@ -100,6 +100,15 @@ into:
 ### Result:
 - Stronger differentiation between job quality levels
 - More meaningful top 10 results
+
+### Implementation:
+- Job title, description, and metadata now receive separate embeddings
+- Semantic weights are title 50%, description 40%, metadata 10%
+- Semantic relevance contributes 80% of the total score
+- Skill overlap contributes 20% without rewarding irrelevant skill volume
+- Batch embedding avoids a separate model call for every field
+- Legacy combined-vector jobs remain supported
+- Unit tests validate field priority, compatibility, and score breakdowns
 
 ---
 
@@ -172,7 +181,7 @@ into:
 
 Priority order:
 
-1. Ranking Intelligence Upgrade
-2. Skill Extraction
+1. ~~Ranking Intelligence Upgrade~~ — completed 2026-07-22
+2. Skill Extraction — next
 3. Score Calibration
 4. Explainability Layer

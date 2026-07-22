@@ -1,25 +1,22 @@
-from sqlalchemy import Column
-from sqlalchemy import Float
-from sqlalchemy import Integer
-from sqlalchemy import String
-from sqlalchemy import Text
+"""Shared job-domain types.
 
-from backend.storage.database import Base
+Database persistence is intentionally implemented in ``JobStore``. Keeping the
+domain record independent of an ORM makes collection scripts and tests usable
+before the web application stack is installed.
+"""
+
+from dataclasses import dataclass
 
 
-class Job(Base):
-    __tablename__ = "jobs"
+@dataclass
+class JobRecord:
+    external_id: str
+    source: str
+    company: str
+    title: str
+    location: str = ""
+    description: str = ""
+    canonical_url: str = ""
+    posted_at: str = ""
+    updated_at: str = ""
 
-    id = Column(Integer, primary_key=True, index=True)
-
-    company = Column(String)
-    title = Column(String)
-    location = Column(String)
-
-    description = Column(Text)
-
-    source_url = Column(String)
-
-    similarity_score = Column(Float)
-
-    status = Column(String, default="discovered")

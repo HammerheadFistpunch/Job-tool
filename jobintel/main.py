@@ -1,16 +1,17 @@
 from fastapi import FastAPI
 
-from backend.storage.database import Base
-from backend.storage.database import engine
-
-from backend.jobs.models import Job
+from backend.storage.database import connect_database, initialize_database
 
 app = FastAPI(title="JobIntel")
 
 
 @app.on_event("startup")
 def startup():
-    Base.metadata.create_all(bind=engine)
+    connection = connect_database()
+    try:
+        initialize_database(connection)
+    finally:
+        connection.close()
 
 
 @app.get("/")

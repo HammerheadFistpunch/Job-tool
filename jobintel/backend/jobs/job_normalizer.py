@@ -17,6 +17,21 @@ class JobNormalizer:
 
         return self._clean(text)
 
+    def normalize_fields(self, job: Dict[str, str]) -> Dict[str, str]:
+        """Return independently embeddable fields for weighted ranking."""
+
+        return {
+            "title": self._clean(job.get("title", "")) or "Unknown job title",
+            "description": (
+                self._clean(job.get("description", ""))
+                or "No job description provided"
+            ),
+            "metadata": self._clean(
+                f"Company: {job.get('company', '')} "
+                f"Location: {job.get('location', '')}"
+            ),
+        }
+
     def _clean(self, text: str) -> str:
         # remove HTML tags if any
         text = re.sub(r"<[^>]+>", " ", text)
