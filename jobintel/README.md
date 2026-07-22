@@ -26,6 +26,21 @@ The current ranking implementation is still experimental. Do not treat its
 score as a reliable fit judgment until structured profile facets, hard filters,
 and labeled evaluation are implemented.
 
+The next implementation step is data-first: complete the intake worksheet,
+then import those explicit rules and supplied resume evidence into the
+structured candidate model. This avoids silently converting soft preferences
+into hard rejections.
+
+## Project reference documents
+
+- [`docs/JOB_TOOL_DATA_INTAKE.md`](docs/JOB_TOOL_DATA_INTAKE.md): fill-in
+  worksheet for eligibility rules, ranking preferences, resume evidence, and
+  job-posting inputs.
+- [`docs/JOB_TOOL_FUNCTION_MAP.md`](docs/JOB_TOOL_FUNCTION_MAP.md): current
+  components, data flow, Mermaid diagrams, and planned end-state architecture.
+- [`BUILD_ROADMAP.md`](BUILD_ROADMAP.md): completed work and implementation
+  sequence.
+
 ## Setup
 
 From the `jobintel` directory:
@@ -82,4 +97,6 @@ setup script after source selection and expiration behavior are finalized.
   be added with source-scoped expiration so an outage cannot falsely expire an
   entire database.
 
-See `BUILD_ROADMAP.md` for the revised implementation sequence.
+See [`BUILD_ROADMAP.md`](BUILD_ROADMAP.md) for the revised implementation
+sequence. Complete [`docs/JOB_TOOL_DATA_INTAKE.md`](docs/JOB_TOOL_DATA_INTAKE.md)
+before the structured-profile and eligibility-filter implementation begins.
