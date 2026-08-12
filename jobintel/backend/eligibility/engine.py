@@ -40,6 +40,9 @@ class EligibilityEvaluator:
         reasons.extend(self._title(title))
         reasons.extend(self._location(location))
         reasons.extend(self._salary(combined))
+        reasons.extend(self._work_arrangement(combined))
+        reasons.extend(self._travel(combined))
+        reasons.extend(self._credentials(combined))
 
         status = "eligible"
         if any(reason.decision == "ineligible" for reason in reasons):
@@ -125,6 +128,72 @@ class EligibilityEvaluator:
                 "salary_below_floor", "ineligible",
                 f"The posted maximum base salary is below ${self.profile.compensation.absolute_base_floor:,}.",
                 evidence,
+            )]
+        return []
+
+    def _work_arrangement(self, text: str) -> list[DecisionReason]:
+        patterns = {
+            "contract_to_hire": (r"\bcontract[- ]to[- ]hire\b", "contract_to_hire"),
+            "fixed_term": (r"\b(fixed[- ]term|term[- ]limited)\b", "fixed_term"),
+            "part_time": (r"\bpart[- ]time\b", "part_time"),
+            "temporary": (r"\btemporary (?:position|role|employment)\b|\btemp role\b", "temporary"),
+            "independent_contractor": (r"\b1099\b|\bindependent contractor\b", "independent_contractor"),
+            "w2_contract": (r"\bw-?2 contract\b", "w2_contract"),
+        }
+        for code, (pattern, arrangement) in patterns.items():
+            match = re.search(pattern, text, re.IGNORECASE)
+            if not match:
+                continue
+            if arrangement in self.profile.work_rules.accepted_arrangements:
+                return []
+            return [DecisionReason(
+                f"arrangement_{code}", "ineligible",
+                "The stated employment arrangement is not accepted.", match.group(0),
+            )]
+        if re.search(r"\bcontract (?:position|role|employment)\b", text, re.IGNORECASE):
+            return [DecisionReason(
+                "contract_type_uncertain", "needs_review",
+                "The role is contractual, but the contract arrangement is unclear.", "contract",
+            )]
+        return []
+
+    def _travel(self, text: str) -> list[DecisionReason]:
+        matches = re.findall(
+            r"(?:travel[^.%]{0,30})?(\d{1,3})\s*%\s*travel|"
+            r"travel[^.%]{0,30}(\d{1,3})\s*%",
+            text,
+            re.IGNORECASE,
+        )
+        percentages = [int(first or second) for first, second in matches]
+        if percentages and max(percentages) > self.profile.work_rules.max_travel_percent:
+            return [DecisionReason(
+                "travel_above_maximum", "ineligible",
+                f"Required travel exceeds the {self.profile.work_rules.max_travel_percent}% maximum.",
+                f"{max(percentages)}% travel",
+            )]
+        return []
+
+    def _credentials(self, text: str) -> list[DecisionReason]:
+        legally_mandatory = re.search(
+            r"(?:must hold|required to hold|active|required)\s+(?:a |an )?(?:professional license|state license|driver'?s license|security clearance)|"
+            r"(?:license|clearance)\s+(?:is )?(?:legally|required by law)",
+            text,
+            re.IGNORECASE,
+        )
+        if legally_mandatory:
+            return [DecisionReason(
+                "legally_mandatory_credential", self.profile.qualification_rules.missing_legally_mandatory_credential,
+                "A legally mandatory license or clearance is required.", legally_mandatory.group(0),
+            )]
+        required_credential = re.search(
+            r"(?:required|must have|must possess)[: ]{1,3}(?:an? )?(?:[a-z0-9+.#-]+\s+){0,4}(?:certification|certificate|license|clearance)",
+            text,
+            re.IGNORECASE,
+        )
+        if required_credential:
+            return [DecisionReason(
+                "required_credential_review", self.profile.qualification_rules.missing_required_credential,
+                "A required credential needs comparison with the candidate record.", required_credential.group(0),
             )]
         return []
 

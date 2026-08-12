@@ -59,15 +59,23 @@ Build an automated, local-first job intelligence system optimized for:
   versions before they enter the queue.
 - Added API endpoints and service/storage tests.
 
-## Next: Profile review and evaluation baseline
+## Completed: Initial profile-policy resolution
 
-1. Resolve the short decision list in `docs/PROFILE_REVIEW.md` and issue a new
-   profile version.
-2. Run collection and review an initial set of real recommendations.
-3. Add queue summary metrics: label counts, precision at 10, hard-reject
+- No hard hybrid office-day maximum.
+- Up to 25% routine travel accepted.
+- Full-time, contract-to-hire, and fixed-term arrangements accepted.
+- Missing salary treated as provisionally eligible.
+- Missing required credentials require review unless legally mandatory.
+- Senior individual-contributor roles rank equally with manager roles.
+- Profile advanced to version `2026-08-12.2`; no unresolved decisions remain.
+
+## Next: Real-job evaluation baseline
+
+1. Run collection and review an initial set of real recommendations.
+2. Add queue summary metrics: label counts, precision at 10, hard-reject
    leakage, and reasons by frequency.
-4. Add a reproducible labeled-job evaluation fixture.
-5. Use the measured baseline to redesign facet matching before Ollama reranking.
+3. Add a reproducible labeled-job evaluation fixture.
+4. Use the measured baseline to redesign facet matching before Ollama reranking.
 
 ## Then: Matching quality
 
@@ -97,6 +105,5 @@ Build an automated, local-first job intelligence system optimized for:
 
 ## Current next build chunk
 
-Resolve the remaining profile decisions and label an initial batch of real jobs
-in the review queue. Then add baseline metrics before semantic-weight tuning or
-Ollama reranking.
+Collect and label an initial batch of real jobs in the review queue. Then add
+baseline metrics before semantic-weight tuning or Ollama reranking.

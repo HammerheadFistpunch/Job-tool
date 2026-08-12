@@ -1,5 +1,5 @@
 {
-  "profile_version": "2026-08-12.1",
+  "profile_version": "2026-08-12.2",
   "professional_name": "Patrick Rich",
   "location": {
     "home_city": "Sandy",
@@ -24,7 +24,20 @@
     "absolute_base_floor": 75000,
     "target_base_min": 90000,
     "target_base_max": 130000,
-    "missing_salary": "needs_review"
+    "missing_salary": "eligible"
+  },
+  "work_rules": {
+    "max_office_days_per_week": null,
+    "max_travel_percent": 25,
+    "accepted_arrangements": ["full_time", "contract_to_hire", "fixed_term"],
+    "missing_employment_type": "eligible"
+  },
+  "qualification_rules": {
+    "missing_required_credential": "needs_review",
+    "missing_legally_mandatory_credential": "ineligible"
+  },
+  "ranking_rules": {
+    "senior_individual_contributor_vs_manager": "equal"
   },
   "target_titles": [
     "Director of Technical Marketing",
@@ -124,12 +137,5 @@
       ]
     }
   ],
-  "unresolved_decisions": [
-    "Maximum acceptable office days per week for hybrid roles",
-    "Maximum acceptable travel percentage",
-    "Treatment of contract, part-time, and temporary roles",
-    "Whether salary-missing jobs should remain needs_review or be provisionally eligible",
-    "Exact credential and security-clearance rejection policy",
-    "Whether senior individual-contributor roles should receive the same preference as manager roles"
-  ]
+  "unresolved_decisions": []
 }

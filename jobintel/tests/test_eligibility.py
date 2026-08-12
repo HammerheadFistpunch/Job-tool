@@ -18,7 +18,11 @@ class StructuredProfileTests(unittest.TestCase):
         self.assertEqual(profile.location.home_city, "Sandy")
         self.assertEqual(profile.location.max_distance_miles, 30)
         self.assertEqual(profile.compensation.absolute_base_floor, 75000)
-        self.assertTrue(profile.unresolved_decisions)
+        self.assertEqual(profile.compensation.missing_salary, "eligible")
+        self.assertEqual(profile.work_rules.max_travel_percent, 25)
+        self.assertIsNone(profile.work_rules.max_office_days_per_week)
+        self.assertEqual(profile.ranking_rules.senior_individual_contributor_vs_manager, "equal")
+        self.assertFalse(profile.unresolved_decisions)
 
     def test_invalid_salary_order_is_rejected(self):
         data = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
@@ -49,10 +53,9 @@ class EligibilityEvaluatorTests(unittest.TestCase):
         decision = self.evaluate()
         self.assertEqual(decision.status, "eligible")
 
-    def test_missing_salary_requires_review(self):
+    def test_missing_salary_is_provisionally_eligible(self):
         decision = self.evaluate(description="Lead product positioning.")
-        self.assertEqual(decision.status, "needs_review")
-        self.assertIn("salary_missing", [reason.code for reason in decision.reasons])
+        self.assertEqual(decision.status, "eligible")
 
     def test_posted_maximum_below_floor_is_ineligible(self):
         decision = self.evaluate(description="Base salary is $55,000 to $70,000.")
@@ -75,8 +78,34 @@ class EligibilityEvaluatorTests(unittest.TestCase):
 
     def test_unlabeled_currency_range_is_not_assumed_to_be_salary(self):
         decision = self.evaluate(description="Manage a $95,000-$125,000 annual media budget.")
+        self.assertEqual(decision.status, "eligible")
+
+    def test_travel_above_25_percent_is_ineligible(self):
+        decision = self.evaluate(description="Base salary: $100,000-$120,000. Requires 30% travel.")
+        self.assertEqual(decision.status, "ineligible")
+        self.assertIn("travel_above_maximum", [reason.code for reason in decision.reasons])
+
+    def test_travel_at_25_percent_is_eligible(self):
+        decision = self.evaluate(description="Base salary: $100,000-$120,000. Up to 25% travel.")
+        self.assertEqual(decision.status, "eligible")
+
+    def test_contract_to_hire_and_fixed_term_are_eligible(self):
+        self.assertEqual(self.evaluate(description="Contract-to-hire. Base salary: $100,000-$120,000.").status, "eligible")
+        self.assertEqual(self.evaluate(description="Fixed-term role. Base salary: $100,000-$120,000.").status, "eligible")
+
+    def test_part_time_and_1099_are_ineligible(self):
+        self.assertEqual(self.evaluate(description="Part-time role. Base salary: $100,000-$120,000.").status, "ineligible")
+        self.assertEqual(self.evaluate(description="1099 independent contractor. Base salary: $100,000-$120,000.").status, "ineligible")
+
+    def test_required_credential_needs_review(self):
+        decision = self.evaluate(description="Base salary: $100,000-$120,000. Required: PMP certification.")
         self.assertEqual(decision.status, "needs_review")
-        self.assertIn("salary_missing", [reason.code for reason in decision.reasons])
+        self.assertIn("required_credential_review", [reason.code for reason in decision.reasons])
+
+    def test_legally_mandatory_license_is_ineligible(self):
+        decision = self.evaluate(description="Base salary: $100,000-$120,000. State license required by law.")
+        self.assertEqual(decision.status, "ineligible")
+        self.assertIn("legally_mandatory_credential", [reason.code for reason in decision.reasons])
 
     def test_unknown_utah_distance_requires_review(self):
         decision = self.evaluate(location="Ogden, Utah")

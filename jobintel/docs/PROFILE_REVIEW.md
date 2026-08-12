@@ -16,21 +16,21 @@ and conservative search rules. It deliberately sends uncertain cases to
   strategic communications, content strategy, and adjacent senior work.
 - Commission-only work, primarily cold-calling roles, forced overtime, and
   explicit SDR/junior-sales titles are hard rejections.
-- Missing salary or unclear eligibility data requires review.
+- Missing salary is provisionally eligible; unclear location data requires review.
 
-## Decisions still needed
+## Resolved policy — profile 2026-08-12.2
 
-1. Maximum number of required office days per week for hybrid roles.
-2. Maximum acceptable travel percentage.
-3. Which contract, part-time, temporary, and contract-to-hire arrangements are
-   acceptable.
-4. Whether postings with no salary should remain `needs_review` or be treated as
-   provisionally eligible.
-5. Which required credentials or security-clearance conditions should reject a
-   job rather than require review.
-6. Whether senior individual-contributor roles should rank equally with manager
-   roles or slightly below them.
+- Hybrid office attendance has no hard maximum.
+- Routine travel up to and including 25% is accepted; higher requirements are
+  ineligible.
+- Full-time, contract-to-hire, and fixed-term employment are accepted.
+  Explicit part-time, temporary, W-2 contract, or 1099 arrangements are
+  ineligible; ambiguous contract language requires review.
+- Jobs without a posted salary are provisionally eligible. A stated maximum
+  below the $75,000 floor remains ineligible.
+- Missing required credentials require review unless a license or clearance is
+  legally mandatory, in which case the job is ineligible.
+- Strong senior individual-contributor roles rank equally with manager roles.
 
-These decisions are not blockers for testing the evaluator or building the
-review queue. Updating any of them should increment `profile_version` so stored
-jobs can be reevaluated against the new policy.
+All previously unresolved profile decisions are now closed. Future policy
+changes should increment `profile_version` so the review queue reevaluates jobs.

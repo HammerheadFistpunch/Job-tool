@@ -76,7 +76,7 @@ This portion works technically, but the matching is not yet trustworthy enough f
 | Candidate profile | `data/input/Profiles/pr_profile.md` | Current source of candidate information | Working, but unstructured |
 | Profile loader | `backend/profile/loader.py` | Reads the Markdown profile | Working |
 | Candidate schema | `backend/profile/schema.py` | Validates versioned profile and search rules | Working |
-| Structured profile | `data/input/Profiles/patrick_profile.json` | Career evidence, targets, preferences, exclusions | Working; six decisions remain |
+| Structured profile | `data/input/Profiles/patrick_profile.json` | Career evidence, targets, preferences, exclusions | Working; initial policy resolved |
 | Eligibility engine | `backend/eligibility/engine.py` | Applies explainable hard filters before ranking | Working |
 | Eligibility command | `backend/evaluate_jobs.py` | Reevaluates stored jobs without AI models | Working |
 | Job normalizer | `backend/jobs/job_normalizer.py` | Prepares job text for embeddings | Working |

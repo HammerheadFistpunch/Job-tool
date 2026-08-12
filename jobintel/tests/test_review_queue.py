@@ -2,6 +2,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from backend.eligibility import EligibilityEvaluator
+from backend.profile.loader import load_structured_profile
 from backend.review import ReviewQueueService
 from backend.storage.job_store import JobStore
 
@@ -74,6 +76,24 @@ class ReviewQueueTests(unittest.TestCase):
             "salary_below_floor",
             [reason["code"] for reason in refreshed["eligibility_reasons"]],
         )
+
+    def test_new_profile_version_creates_fresh_evaluation(self):
+        profile = load_structured_profile(PROFILE_PATH)
+        with JobStore(self.database) as store:
+            job = store.list_active_jobs()[0]
+            decision = EligibilityEvaluator(profile).evaluate(job)
+            store.save_eligibility_evaluation(
+                job["database_id"], "2026-08-12.1", decision
+            )
+
+        self.service.list_jobs()
+        with JobStore(self.database) as store:
+            versions = {
+                row["profile_version"] for row in store.connection.execute(
+                    "SELECT profile_version FROM job_eligibility_evaluations"
+                )
+            }
+        self.assertEqual(versions, {"2026-08-12.1", "2026-08-12.2"})
 
 
 if __name__ == "__main__":

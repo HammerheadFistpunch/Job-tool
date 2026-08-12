@@ -29,9 +29,9 @@ against Patrick's labeled review decisions.
 
 The prepopulated profile is stored at
 `data/input/Profiles/patrick_profile.json`. Known facts and rules are active;
-unresolved choices are listed explicitly in `unresolved_decisions`. Missing
-salary, unclear locations, and other ambiguous eligibility data produce
-`needs_review` rather than automatic rejection.
+all six initial policy choices are resolved in profile version `2026-08-12.2`.
+Missing salary is provisionally eligible; unclear locations and ambiguous
+contract or credential requirements produce `needs_review` rather than guesses.
 
 ## Project reference documents
 
