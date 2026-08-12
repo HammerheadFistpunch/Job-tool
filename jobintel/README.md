@@ -81,6 +81,16 @@ Results are stored in `job_eligibility_evaluations` with the profile version,
 decision, exact reasons, and evaluation time. Ineligible jobs remain in the
 database for audit but are excluded from semantic ranking.
 
+Start the local review queue:
+
+```powershell
+python -m uvicorn main:app --reload
+```
+
+Open `http://127.0.0.1:8000`. The queue provides job links, eligibility
+explanations, posting text, filters, review states, match labels, consistent
+interest/rejection reasons, and notes. Review data remains in local SQLite.
+
 Run dependency-light unit tests:
 
 ```powershell

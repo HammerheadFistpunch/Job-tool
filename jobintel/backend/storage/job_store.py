@@ -12,6 +12,10 @@ from typing import Any, Iterable
 from backend.storage.database import connect_database, initialize_database
 
 
+REVIEW_STATES = {"new", "saved", "dismissed", "applied", "interviewed", "rejected"}
+MATCH_LABELS = {"strong_match", "consider", "weak_match", "reject", "hard_reject"}
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -188,19 +192,27 @@ class JobStore:
         """Persist an explainable result without changing or deleting the job."""
 
         payload = decision.to_dict()
+        job_row = self.connection.execute(
+            "SELECT content_hash FROM jobs WHERE id = ?", (job_id,)
+        ).fetchone()
+        if job_row is None:
+            raise KeyError(f"Job not found: {job_id}")
         self.connection.execute(
             """
             INSERT INTO job_eligibility_evaluations(
-                job_id, profile_version, status, reasons_json, evaluated_at
-            ) VALUES (?, ?, ?, ?, ?)
+                job_id, profile_version, status, reasons_json, evaluated_at,
+                job_content_hash
+            ) VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(job_id, profile_version) DO UPDATE SET
                 status = excluded.status,
                 reasons_json = excluded.reasons_json,
-                evaluated_at = excluded.evaluated_at
+                evaluated_at = excluded.evaluated_at,
+                job_content_hash = excluded.job_content_hash
             """,
             (
                 job_id, profile_version, decision.status,
                 json.dumps(payload["reasons"], ensure_ascii=False), utc_now(),
+                job_row["content_hash"],
             ),
         )
         self.connection.commit()
@@ -223,5 +235,87 @@ class JobStore:
         for row in rows:
             result = dict(row)
             result["reasons"] = json.loads(result.pop("reasons_json"))
+            results.append(result)
+        return results
+
+    def save_review(
+        self,
+        job_id: int,
+        review_state: str,
+        match_label: str | None,
+        reason_codes: list[str] | None = None,
+        notes: str = "",
+    ) -> dict[str, Any]:
+        if review_state not in REVIEW_STATES:
+            raise ValueError(f"Invalid review state: {review_state}")
+        if match_label is not None and match_label not in MATCH_LABELS:
+            raise ValueError(f"Invalid match label: {match_label}")
+        if not self.connection.execute("SELECT 1 FROM jobs WHERE id = ?", (job_id,)).fetchone():
+            raise KeyError(f"Job not found: {job_id}")
+
+        self.connection.execute(
+            """
+            INSERT INTO job_reviews(
+                job_id, review_state, match_label, reason_codes_json, notes, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(job_id) DO UPDATE SET
+                review_state = excluded.review_state,
+                match_label = excluded.match_label,
+                reason_codes_json = excluded.reason_codes_json,
+                notes = excluded.notes,
+                updated_at = excluded.updated_at
+            """,
+            (
+                job_id, review_state, match_label,
+                json.dumps(reason_codes or [], ensure_ascii=False), notes.strip(), utc_now(),
+            ),
+        )
+        self.connection.commit()
+        return self.get_review(job_id)
+
+    def get_review(self, job_id: int) -> dict[str, Any]:
+        row = self.connection.execute(
+            "SELECT * FROM job_reviews WHERE job_id = ?", (job_id,)
+        ).fetchone()
+        if row is None:
+            return {
+                "job_id": job_id,
+                "review_state": "new",
+                "match_label": None,
+                "reason_codes": [],
+                "notes": "",
+                "updated_at": None,
+            }
+        result = dict(row)
+        result["reason_codes"] = json.loads(result.pop("reason_codes_json"))
+        return result
+
+    def list_review_queue(self, profile_version: str) -> list[dict[str, Any]]:
+        rows = self.connection.execute(
+            """
+            SELECT j.id AS database_id, j.external_id, j.source, j.company, j.title,
+                   j.location, j.description, j.canonical_url, j.posted_at,
+                   j.similarity_score, e.status AS eligibility_status,
+                   e.reasons_json AS eligibility_reasons_json, e.evaluated_at,
+                   COALESCE(r.review_state, 'new') AS review_state,
+                   r.match_label, COALESCE(r.reason_codes_json, '[]') AS reason_codes_json,
+                   COALESCE(r.notes, '') AS notes, r.updated_at AS reviewed_at
+            FROM jobs j
+            JOIN job_eligibility_evaluations e
+              ON e.job_id = j.id AND e.profile_version = ?
+            LEFT JOIN job_reviews r ON r.job_id = j.id
+            WHERE j.active = 1
+            ORDER BY
+              CASE COALESCE(r.review_state, 'new') WHEN 'new' THEN 0 WHEN 'saved' THEN 1 ELSE 2 END,
+              CASE e.status WHEN 'eligible' THEN 0 WHEN 'needs_review' THEN 1 ELSE 2 END,
+              j.last_seen_at DESC
+            """,
+            (profile_version,),
+        ).fetchall()
+        results = []
+        for row in rows:
+            result = dict(row)
+            result["eligibility_reasons"] = json.loads(result.pop("eligibility_reasons_json"))
+            result["reason_codes"] = json.loads(result.pop("reason_codes_json"))
             results.append(result)
         return results

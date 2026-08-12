@@ -46,6 +46,10 @@ JOB_COLUMNS = {
     "similarity_score": "REAL",
 }
 
+ELIGIBILITY_COLUMNS = {
+    "job_content_hash": "TEXT",
+}
+
 
 def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
     return {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
@@ -97,7 +101,19 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             status TEXT NOT NULL CHECK(status IN ('eligible', 'needs_review', 'ineligible')),
             reasons_json TEXT NOT NULL DEFAULT '[]',
             evaluated_at TEXT NOT NULL,
+            job_content_hash TEXT,
             UNIQUE(job_id, profile_version)
+        );
+
+        CREATE TABLE IF NOT EXISTS job_reviews (
+            job_id INTEGER PRIMARY KEY REFERENCES jobs(id) ON DELETE CASCADE,
+            review_state TEXT NOT NULL DEFAULT 'new'
+                CHECK(review_state IN ('new', 'saved', 'dismissed', 'applied', 'interviewed', 'rejected')),
+            match_label TEXT
+                CHECK(match_label IS NULL OR match_label IN ('strong_match', 'consider', 'weak_match', 'reject', 'hard_reject')),
+            reason_codes_json TEXT NOT NULL DEFAULT '[]',
+            notes TEXT NOT NULL DEFAULT '',
+            updated_at TEXT NOT NULL
         );
         """
     )
@@ -108,6 +124,13 @@ def initialize_database(connection: sqlite3.Connection) -> None:
     for name, definition in JOB_COLUMNS.items():
         if name not in existing:
             connection.execute(f"ALTER TABLE jobs ADD COLUMN {name} {definition}")
+
+    existing_evaluations = _column_names(connection, "job_eligibility_evaluations")
+    for name, definition in ELIGIBILITY_COLUMNS.items():
+        if name not in existing_evaluations:
+            connection.execute(
+                f"ALTER TABLE job_eligibility_evaluations ADD COLUMN {name} {definition}"
+            )
 
     connection.executescript(
         """
@@ -120,6 +143,8 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             ON jobs(last_seen_at);
         CREATE INDEX IF NOT EXISTS ix_job_eligibility_status
             ON job_eligibility_evaluations(profile_version, status);
+        CREATE INDEX IF NOT EXISTS ix_job_reviews_state_label
+            ON job_reviews(review_state, match_label);
         """
     )
     connection.commit()

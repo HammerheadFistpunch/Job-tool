@@ -85,20 +85,21 @@ This portion works technically, but the matching is not yet trustworthy enough f
 | Skill extractor | `backend/ai/skill_extractor.py` | Finds recognized keywords | Too limited |
 | Ranking engine | `backend/ai/ranking_engine.py` | Combines semantic and skill scores | Experimental |
 | Recommendation command | `backend/run_recommendations.py` | Produces console recommendations | Experimental |
-| FastAPI application | `main.py` | Currently provides only an online-status endpoint | Scaffold only |
+| FastAPI application | `main.py` | Local review UI and JSON endpoints | Working |
 | Ollama analysis | Not built | Detailed requirement/evidence comparison | Planned |
-| Review interface | Not built | Review, label, save, or reject jobs | Planned |
+| Review interface | `main.py` | Review, label, save, filter, and explain jobs | Working |
 | Scheduler setup | Not built | Automatically installs scheduled collection | Collection command is scheduler-ready |
 
 ## Database components
 
-The SQLite database currently contains three main tables:
+The SQLite database currently contains four main tables:
 
 | Table | Purpose |
 |---|---|
 | `jobs` | Stores complete job postings, URLs, source IDs, timestamps, status, and source data |
 | `collection_runs` | Records when collection ran, how many jobs were found, and any source failures |
 | `job_eligibility_evaluations` | Stores profile-versioned decisions, reasons, evidence, and evaluation time |
+| `job_reviews` | Stores workflow state, match label, reason codes, notes, and review time |
 
 Jobs are uniquely identified by:
 

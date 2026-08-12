@@ -47,16 +47,27 @@ Build an automated, local-first job intelligence system optimized for:
 - Added unit tests for hard rules, ambiguous data, profile validation, and
   evaluation persistence.
 
-## Next: Profile review and local review queue
+## Completed: Local review queue foundation
+
+- Added SQLite-backed states: new, saved, dismissed, applied, interviewed,
+  rejected.
+- Added match labels: strong match, consider, weak match, reject, hard reject.
+- Added consistent interest/rejection reason codes and free-text notes.
+- Added a responsive local FastAPI review page with filters, source links,
+  eligibility evidence, and posting text.
+- Added automatic evaluation for new jobs, changed postings, and new profile
+  versions before they enter the queue.
+- Added API endpoints and service/storage tests.
+
+## Next: Profile review and evaluation baseline
 
 1. Resolve the short decision list in `docs/PROFILE_REVIEW.md` and issue a new
    profile version.
-2. Add job review states: new, saved, dismissed, applied, interviewed, rejected.
-3. Add personal labels: strong match, consider, weak match, reject, hard reject.
-4. Build a small local review interface showing the job link, eligibility
-   decision, exact reasons, and current experimental score.
-5. Reevaluate stored jobs automatically when the profile version changes.
-6. Measure precision at 10 and hard-reject leakage from real review labels.
+2. Run collection and review an initial set of real recommendations.
+3. Add queue summary metrics: label counts, precision at 10, hard-reject
+   leakage, and reasons by frequency.
+4. Add a reproducible labeled-job evaluation fixture.
+5. Use the measured baseline to redesign facet matching before Ollama reranking.
 
 ## Then: Matching quality
 
@@ -86,6 +97,6 @@ Build an automated, local-first job intelligence system optimized for:
 
 ## Current next build chunk
 
-Review the prepopulated profile's unresolved decisions, then build the local
-review queue and feedback labels. This creates the real evaluation data needed
-before semantic-weight tuning or Ollama reranking.
+Resolve the remaining profile decisions and label an initial batch of real jobs
+in the review queue. Then add baseline metrics before semantic-weight tuning or
+Ollama reranking.
