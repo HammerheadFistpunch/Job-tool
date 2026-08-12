@@ -4,7 +4,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from backend.review import ReviewQueueService
+from backend.config import load_settings
+from backend.review import ReviewQueueService, calculate_metrics
 from backend.storage.database import connect_database, initialize_database
 
 
@@ -37,6 +38,13 @@ def status():
 def jobs():
     service = ReviewQueueService()
     return {"profile_version": service.profile.profile_version, "jobs": service.list_jobs()}
+
+
+@app.get("/api/metrics")
+def metrics():
+    settings = load_settings()
+    jobs = ReviewQueueService().list_jobs()
+    return calculate_metrics(jobs, int(settings["evaluation"]["precision_cutoff"]))
 
 
 @app.patch("/api/jobs/{job_id}/review")

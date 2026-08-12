@@ -57,6 +57,11 @@ Edit `config/job_sources.json` to add ATS board tokens. Supported source types
 are `greenhouse` and `lever`. A source can be retained but skipped by setting
 `"enabled": false`.
 
+Runtime settings live in `config/settings.json`. The dashboard port, collection
+schedule, embedding model, and future Ollama URL/model/context are centralized
+there. Environment variables such as `JOBINTEL_PORT`,
+`JOBINTEL_EMBEDDING_MODEL`, and `JOBINTEL_OLLAMA_MODEL` override the file.
+
 ## Commands
 
 Collect and store jobs without loading AI models:
@@ -97,6 +102,31 @@ Run dependency-light unit tests:
 python -m unittest discover -s tests -v
 ```
 
+Validate the reproducible policy fixture:
+
+```powershell
+python -m backend.evaluate_fixture
+```
+
+Generate a target-machine readiness report:
+
+```powershell
+python -m backend.diagnostics
+```
+
+The report is saved as `jobintel-readiness.json` and covers Python, packages,
+database integrity, profile state, configuration, Ollama reachability, and
+installed Ollama models. An unavailable Ollama service is reported without
+preventing collection, eligibility, or review work.
+
+## Windows launchers
+
+- `Install-JobIntel.cmd` creates `.venv`, installs dependencies, and runs
+  diagnostics. It deliberately does not register a Scheduled Task yet.
+- `Open-JobIntel.cmd` starts the dashboard minimized and opens it in the default
+  browser.
+- `Run-Diagnostics.cmd` regenerates the readiness report.
+
 By default, data is stored in `jobintel.db`. Set `JOBINTEL_DB_PATH` to use a
 different SQLite file.
 
@@ -120,5 +150,5 @@ setup script after source selection and expiration behavior are finalized.
   entire database.
 
 See [`BUILD_ROADMAP.md`](BUILD_ROADMAP.md) for the revised implementation
-sequence and [`docs/PROFILE_REVIEW.md`](docs/PROFILE_REVIEW.md) for the short
-list of profile choices that still need Patrick's review.
+sequence and [`docs/PROFILE_REVIEW.md`](docs/PROFILE_REVIEW.md) for the resolved
+profile policy.

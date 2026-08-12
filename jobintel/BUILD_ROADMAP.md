@@ -69,13 +69,24 @@ Build an automated, local-first job intelligence system optimized for:
 - Senior individual-contributor roles rank equally with manager roles.
 - Profile advanced to version `2026-08-12.2`; no unresolved decisions remain.
 
+## Completed: Offline readiness foundation
+
+- Added centralized settings and environment-variable overrides for the
+  dashboard, schedule, embedding model, and future Ollama adapter.
+- Added review metrics for coverage, label/state counts, reasons, precision at
+  10, and hard-reject leakage.
+- Added a reproducible 10-job policy fixture and validation command.
+- Added diagnostics for Python, dependencies, SQLite integrity, profile state,
+  configuration, Ollama availability, and installed models.
+- Added safe Windows install, dashboard, and diagnostic launchers without yet
+  registering background tasks.
+
 ## Next: Real-job evaluation baseline
 
 1. Run collection and review an initial set of real recommendations.
-2. Add queue summary metrics: label counts, precision at 10, hard-reject
-   leakage, and reasons by frequency.
-3. Add a reproducible labeled-job evaluation fixture.
-4. Use the measured baseline to redesign facet matching before Ollama reranking.
+2. Surface the implemented summary metrics in the dashboard after enough real
+   labels exist to make them meaningful.
+3. Use the measured baseline to redesign facet matching before Ollama reranking.
 
 ## Then: Matching quality
 

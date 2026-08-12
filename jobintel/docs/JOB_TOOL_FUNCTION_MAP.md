@@ -88,6 +88,10 @@ This portion works technically, but the matching is not yet trustworthy enough f
 | FastAPI application | `main.py` | Local review UI and JSON endpoints | Working |
 | Ollama analysis | Not built | Detailed requirement/evidence comparison | Planned |
 | Review interface | `main.py` | Review, label, save, filter, and explain jobs | Working |
+| Review metrics | `backend/review/metrics.py` | Coverage, precision, leakage, labels, reasons | Working; awaiting real labels |
+| Runtime settings | `config/settings.json` | Dashboard, schedule, embedding, Ollama settings | Working |
+| Diagnostics | `backend/diagnostics.py` | Target-machine readiness report | Working |
+| Evaluation fixture | `data/evaluation/baseline_jobs.json` | Reproducible policy regression set | Working |
 | Scheduler setup | Not built | Automatically installs scheduled collection | Collection command is scheduler-ready |
 
 ## Database components
