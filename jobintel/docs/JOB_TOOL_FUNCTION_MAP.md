@@ -92,6 +92,10 @@ This portion works technically, but the matching is not yet trustworthy enough f
 | Runtime settings | `config/settings.json` | Dashboard, schedule, embedding, Ollama settings | Working |
 | Diagnostics | `backend/diagnostics.py` | Target-machine readiness report | Working |
 | Evaluation fixture | `data/evaluation/baseline_jobs.json` | Reproducible policy regression set | Working |
+| Source registry | `config/job_sources.json` | ATS boards plus role/location prefilter | Working; 14 boards live-verified |
+| Source management | `backend/jobs/source_config.py`, `main.py` | Toggle boards and inspect health | Working |
+| Market prefilter | `backend/jobs/prefilter.py` | Reject obvious wrong-role/wrong-location records before storage | Working |
+| Posting expiration | `backend/storage/job_store.py` | Deactivate missing jobs after a successful source fetch | Working |
 | Scheduler setup | Not built | Automatically installs scheduled collection | Collection command is scheduler-ready |
 
 ## Database components

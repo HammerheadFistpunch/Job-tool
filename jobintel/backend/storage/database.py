@@ -94,6 +94,19 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             errors_json TEXT NOT NULL DEFAULT '[]'
         );
 
+        CREATE TABLE IF NOT EXISTS collection_source_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id INTEGER NOT NULL REFERENCES collection_runs(id) ON DELETE CASCADE,
+            source TEXT NOT NULL,
+            company TEXT NOT NULL,
+            status TEXT NOT NULL,
+            fetched_count INTEGER NOT NULL DEFAULT 0,
+            accepted_count INTEGER NOT NULL DEFAULT 0,
+            filtered_count INTEGER NOT NULL DEFAULT 0,
+            expired_count INTEGER NOT NULL DEFAULT 0,
+            error TEXT NOT NULL DEFAULT ''
+        );
+
         CREATE TABLE IF NOT EXISTS job_eligibility_evaluations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
@@ -145,6 +158,8 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             ON job_eligibility_evaluations(profile_version, status);
         CREATE INDEX IF NOT EXISTS ix_job_reviews_state_label
             ON job_reviews(review_state, match_label);
+        CREATE INDEX IF NOT EXISTS ix_collection_source_results_run
+            ON collection_source_results(run_id, status);
         """
     )
     connection.commit()

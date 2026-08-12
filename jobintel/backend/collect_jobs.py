@@ -16,9 +16,16 @@ def collect() -> tuple[int, int]:
     with JobStore() as store:
         run_id = store.start_collection_run()
         try:
-            raw_jobs, errors = aggregator.fetch_all_jobs_with_report()
+            raw_jobs, errors, reports = aggregator.fetch_all_jobs_with_report()
             jobs = JobIngestionPipeline().load_from_list(raw_jobs)
             summary = store.upsert_jobs(jobs)
+            for report in reports:
+                if report["status"] == "success":
+                    report["expired"] = store.expire_missing_from_source(
+                        report["source"], report["company"], report["external_ids"]
+                    )
+                    summary.expired += report["expired"]
+            store.record_source_results(run_id, reports)
             store.finish_collection_run(run_id, summary, errors)
         except Exception as error:
             store.fail_collection_run(run_id, error)
@@ -28,7 +35,7 @@ def collect() -> tuple[int, int]:
         "Collection complete: "
         f"{summary.fetched} fetched, {summary.created} new, "
         f"{summary.updated} updated, {summary.unchanged} unchanged, "
-        f"{len(errors)} source errors."
+        f"{summary.expired} expired, {len(errors)} source errors."
     )
     for error in errors:
         print(

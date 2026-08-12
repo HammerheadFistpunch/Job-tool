@@ -88,6 +88,17 @@ Build an automated, local-first job intelligence system optimized for:
    labels exist to make them meaningful.
 3. Use the measured baseline to redesign facet matching before Ollama reranking.
 
+## Completed: Expanded source collection
+
+- Expanded the default registry from 3 to 20 candidate employers, with 14
+  live-verified ATS boards enabled by default.
+- Added configurable role and location prefiltering before database storage.
+- Added per-board collection health, fetched/accepted/filtered counts, and a
+  dashboard source-management panel.
+- Added source-aware expiration that cannot close jobs when a board fails.
+- Live smoke run retained 76 relevant postings across 9 employers with 14
+  successful board checks; valid boards with zero current matches remain healthy.
+
 ## Then: Matching quality
 
 1. Chunk long descriptions so model token limits do not discard requirements.

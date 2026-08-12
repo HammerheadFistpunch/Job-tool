@@ -1,19 +1,30 @@
 {
+  "filters": {
+    "enabled": true,
+    "title_terms": ["marketing", "communications", "content", "creative", "brand", "editorial", "producer", "video", "media", "public relations", "community", "product marketing", "technical marketing", "strategy"],
+    "excluded_title_terms": ["sales development representative", "account executive", "recruiter", "software engineer", "data scientist"],
+    "location_terms": ["remote", "united states", "usa", "utah", "salt lake", "sandy", "lehi", "draper", "south jordan", "murray", "cottonwood", "provo", "orem", "american fork"]
+  },
   "sources": [
-    {
-      "type": "greenhouse",
-      "company": "airbnb",
-      "enabled": true
-    },
-    {
-      "type": "greenhouse",
-      "company": "stripe",
-      "enabled": true
-    },
-    {
-      "type": "greenhouse",
-      "company": "dropbox",
-      "enabled": true
-    }
+    {"type": "greenhouse", "company": "airbnb", "display_name": "Airbnb", "enabled": true},
+    {"type": "greenhouse", "company": "stripe", "display_name": "Stripe", "enabled": true},
+    {"type": "greenhouse", "company": "dropbox", "display_name": "Dropbox", "enabled": true},
+    {"type": "greenhouse", "company": "cloudflare", "display_name": "Cloudflare", "enabled": true},
+    {"type": "greenhouse", "company": "datadog", "display_name": "Datadog", "enabled": true},
+    {"type": "greenhouse", "company": "figma", "display_name": "Figma", "enabled": true},
+    {"type": "greenhouse", "company": "reddit", "display_name": "Reddit", "enabled": true},
+    {"type": "greenhouse", "company": "discord", "display_name": "Discord", "enabled": true},
+    {"type": "greenhouse", "company": "webflow", "display_name": "Webflow", "enabled": true},
+    {"type": "greenhouse", "company": "notion", "display_name": "Notion", "enabled": false, "note": "Board token returned 404 on 2026-08-12"},
+    {"type": "greenhouse", "company": "airtable", "display_name": "Airtable", "enabled": true},
+    {"type": "greenhouse", "company": "plaid", "display_name": "Plaid", "enabled": false, "note": "Board token returned 404 on 2026-08-12"},
+    {"type": "greenhouse", "company": "samsara", "display_name": "Samsara", "enabled": true},
+    {"type": "greenhouse", "company": "klaviyo", "display_name": "Klaviyo", "enabled": true},
+    {"type": "greenhouse", "company": "intercom", "display_name": "Intercom", "enabled": true},
+    {"type": "greenhouse", "company": "vimeo", "display_name": "Vimeo", "enabled": false, "note": "Board token returned 404 on 2026-08-12"},
+    {"type": "greenhouse", "company": "hashicorp", "display_name": "HashiCorp", "enabled": false, "note": "Board token returned 404 on 2026-08-12"},
+    {"type": "greenhouse", "company": "lucidsoftware", "display_name": "Lucid Software", "enabled": true},
+    {"type": "lever", "company": "getweave", "display_name": "Weave", "enabled": false, "note": "Board token returned 404 on 2026-08-12"},
+    {"type": "greenhouse", "company": "pattern", "display_name": "Pattern", "enabled": false, "note": "Board token returned 404 on 2026-08-12"}
   ]
 }

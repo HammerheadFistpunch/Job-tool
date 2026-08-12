@@ -55,6 +55,7 @@ class UpsertSummary:
     created: int = 0
     updated: int = 0
     unchanged: int = 0
+    expired: int = 0
 
 
 class JobStore:
@@ -100,6 +101,53 @@ class JobStore:
             ),
         )
         self.connection.commit()
+
+    def record_source_results(self, run_id: int, reports: list[dict[str, Any]]) -> None:
+        self.connection.executemany(
+            """
+            INSERT INTO collection_source_results(
+                run_id, source, company, status, fetched_count, accepted_count,
+                filtered_count, expired_count, error
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [(
+                run_id, report.get("source", ""), report.get("company", ""),
+                report.get("status", ""), report.get("fetched", 0),
+                report.get("accepted", 0), report.get("filtered", 0),
+                report.get("expired", 0), report.get("error", ""),
+            ) for report in reports],
+        )
+        self.connection.commit()
+
+    def expire_missing_from_source(
+        self, source: str, company: str, external_ids: list[str]
+    ) -> int:
+        """Close absent postings only after their own board fetched successfully."""
+        parameters: list[Any] = [source.lower(), company.lower()]
+        sql = """
+            UPDATE jobs SET active = 0
+            WHERE active = 1 AND lower(source) = ? AND lower(company) = ?
+        """
+        if external_ids:
+            sql += f" AND external_id NOT IN ({','.join('?' for _ in external_ids)})"
+            parameters.extend(external_ids)
+        cursor = self.connection.execute(sql, parameters)
+        self.connection.commit()
+        return cursor.rowcount
+
+    def list_source_health(self) -> list[dict[str, Any]]:
+        rows = self.connection.execute(
+            """
+            SELECT csr.*, cr.started_at, cr.completed_at
+            FROM collection_source_results csr
+            JOIN collection_runs cr ON cr.id = csr.run_id
+            WHERE csr.id IN (
+                SELECT MAX(id) FROM collection_source_results GROUP BY source, company
+            )
+            ORDER BY csr.company
+            """
+        ).fetchall()
+        return [dict(row) for row in rows]
 
     def fail_collection_run(self, run_id: int, error: Exception) -> None:
         self.connection.execute(

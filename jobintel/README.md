@@ -57,6 +57,15 @@ Edit `config/job_sources.json` to add ATS board tokens. Supported source types
 are `greenhouse` and `lever`. A source can be retained but skipped by setting
 `"enabled": false`.
 
+The default registry now includes 20 companies rather than the original three.
+Fourteen boards were live-verified on August 12, 2026; six retained candidate
+employers are disabled because their former or guessed ATS token returned 404.
+The collector applies the configured role and location prefilter before storage,
+records fetched/kept/filtered/error counts per board, and expires a posting only
+after its own board completes successfully. Open the **Sources** panel in the
+dashboard to inspect board health or enable and disable sources without editing
+JSON. Disabled source changes take effect on the next collection run.
+
 Runtime settings live in `config/settings.json`. The dashboard port, collection
 schedule, embedding model, and future Ollama URL/model/context are centralized
 there. Environment variables such as `JOBINTEL_PORT`,
