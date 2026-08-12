@@ -2,7 +2,8 @@
 
 **Repository:** `HammerheadFistpunch/Job-tool`  
 **Working branch:** `GPT_Redesign`  
-**Reference state:** Collection and deterministic eligibility foundations complete; review queue planned next.
+**Reference state:** Direct ATS collection, deterministic eligibility, and the
+review queue work; broad market discovery is the current blocker.
 
 ## System overview
 
@@ -167,10 +168,12 @@ This layer now provides:
 
 ## Plain-language status
 
-The tool can now reliably **find, remember, and screen jobs**. The next step is a
-small local review queue so Patrick can label real results. Those labels will
-provide the evidence needed to improve matching quality rather than guessing at
-weights.
+The tool can reliably **collect configured company boards, remember postings,
+screen them, and present them for review**. It cannot yet discover a sufficiently
+broad cross-employer market. The latest 77-job target-machine run remained
+dominated by three companies, so the current queue should not be labeled for
+matching evaluation. Query-based remote-US and Utah discovery is the next
+required component.
 
 ## Planned end-state workflow
 

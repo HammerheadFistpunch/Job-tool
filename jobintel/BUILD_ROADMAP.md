@@ -81,13 +81,6 @@ Build an automated, local-first job intelligence system optimized for:
 - Added safe Windows install, dashboard, and diagnostic launchers without yet
   registering background tasks.
 
-## Next: Real-job evaluation baseline
-
-1. Run collection and review an initial set of real recommendations.
-2. Surface the implemented summary metrics in the dashboard after enough real
-   labels exist to make them meaningful.
-3. Use the measured baseline to redesign facet matching before Ollama reranking.
-
 ## Completed: Expanded source collection
 
 - Expanded the default registry from 3 to 20 candidate employers, with 14
@@ -98,6 +91,47 @@ Build an automated, local-first job intelligence system optimized for:
 - Added source-aware expiration that cannot close jobs when a board fails.
 - Live smoke run retained 76 relevant postings across 9 employers with 14
   successful board checks; valid boards with zero current matches remain healthy.
+
+## Current blocker: Employer-biased discovery
+
+The target-machine run returned 77 active jobs, but the queue remained dominated
+by Stripe, Airbnb, and Dropbox. The source-registry work is operationally sound,
+but adding individual company boards does not provide broad market discovery.
+This batch must not be used to tune matching or establish precision metrics.
+
+## Next: Query-based market discovery
+
+1. Add one or more broad sources that accept role and location queries across
+   employers. Keep direct Greenhouse and Lever boards as supplemental sources.
+2. Centralize configurable queries for target roles, remote-US work, and the
+   Sandy/Salt Lake-area market.
+3. Normalize broad-source results into the existing ingestion pipeline and
+   deduplicate overlaps with direct ATS postings.
+4. Preserve canonical links, provider attribution, query attribution, and raw
+   source records.
+5. Record per-query fetched/accepted/filtered/error counts, rate limits, and last
+   successful collection.
+6. Treat API-backed providers as optional integrations. Missing keys or provider
+   outages must not stop ATS collection or eligibility evaluation.
+7. Add tests for pagination, query construction, normalization, cross-source
+   deduplication, partial failures, and safe expiration behavior.
+
+### Discovery acceptance criteria
+
+- A live collection contains at least 15 distinct employers.
+- No single employer represents more than 20% of the reviewable queue.
+- At least 30 reviewable jobs survive collection and deterministic eligibility.
+- Remote-US and Utah-area searches are both represented in the collection
+  report, even when one query yields zero matches.
+- Every enabled source/query reports success, failure, and result counts.
+- Repeated runs do not create duplicate jobs or erase review history.
+
+## Then: Real-job evaluation baseline
+
+1. Have Patrick label approximately 20–30 jobs from the diverse queue.
+2. Surface the implemented summary metrics in the dashboard.
+3. Measure precision at 10, hard-reject leakage, coverage, and reason frequency.
+4. Use that measured baseline to redesign facet matching before Ollama reranking.
 
 ## Then: Matching quality
 
@@ -119,13 +153,12 @@ Build an automated, local-first job intelligence system optimized for:
 
 ## Then: Operations and expansion
 
-1. Add source-scoped expiration and job closure detection.
-2. Add Windows scheduling setup, logs, retry policy, and failure notification.
-3. Add import/export and database backup.
-4. Expand sources only after their recommendation yield can be measured.
-5. Add daily summaries and optional notifications.
+1. Add Windows scheduling setup, logs, retry policy, and failure notification.
+2. Add import/export and database backup.
+3. Expand sources only after their recommendation yield can be measured.
+4. Add daily summaries and optional notifications.
 
 ## Current next build chunk
 
-Collect and label an initial batch of real jobs in the review queue. Then add
-baseline metrics before semantic-weight tuning or Ollama reranking.
+Implement query-based broad market discovery and meet the diversity acceptance
+criteria above. Do not request user labels or tune matching until then.

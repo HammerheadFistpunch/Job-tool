@@ -35,6 +35,8 @@ contract or credential requirements produce `needs_review` rather than guesses.
 
 ## Project reference documents
 
+- [`../READ_FIRST.md`](../READ_FIRST.md): authoritative restart checkpoint,
+  verified status, known limitations, and immediate next milestone.
 - [`docs/JOB_TOOL_DATA_INTAKE.md`](docs/JOB_TOOL_DATA_INTAKE.md): fill-in
   worksheet for eligibility rules, ranking preferences, resume evidence, and
   job-posting inputs.
@@ -154,9 +156,16 @@ setup script after source selection and expiration behavior are finalized.
 
 - Existing review status is not overwritten when a posting changes.
 - A partial source failure does not delete jobs from successful earlier runs.
-- Jobs are not yet marked inactive when they disappear from a source. That will
-  be added with source-scoped expiration so an outage cannot falsely expire an
-  entire database.
+- Jobs missing from a successfully fetched board are marked inactive. A failed
+  board never expires its jobs.
+
+## Current collection limitation
+
+The latest target-machine run returned 77 active jobs, still dominated by
+Stripe, Airbnb, and Dropbox. The direct-board collector is functioning as
+designed, but it does not represent the broader market. Do not use that batch to
+tune matching. The next milestone is query-based discovery across employers;
+see `../READ_FIRST.md` and `BUILD_ROADMAP.md`.
 
 See [`BUILD_ROADMAP.md`](BUILD_ROADMAP.md) for the revised implementation
 sequence and [`docs/PROFILE_REVIEW.md`](docs/PROFILE_REVIEW.md) for the resolved
