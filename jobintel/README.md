@@ -22,14 +22,16 @@ The reliable collection foundation is complete:
 - The legacy database is upgraded in place without deleting existing rows.
 - Collection can run independently of sentence-transformers and Ollama.
 
-The current ranking implementation is still experimental. Do not treat its
-score as a reliable fit judgment until structured profile facets, hard filters,
-and labeled evaluation are implemented.
+The structured profile and first deterministic eligibility layer are now in
+place. Hard rejections run before semantic ranking and cannot be overridden by
+an embedding score. Semantic ranking remains experimental until it is tuned
+against Patrick's labeled review decisions.
 
-The next implementation step is data-first: complete the intake worksheet,
-then import those explicit rules and supplied resume evidence into the
-structured candidate model. This avoids silently converting soft preferences
-into hard rejections.
+The prepopulated profile is stored at
+`data/input/Profiles/patrick_profile.json`. Known facts and rules are active;
+unresolved choices are listed explicitly in `unresolved_decisions`. Missing
+salary, unclear locations, and other ambiguous eligibility data produce
+`needs_review` rather than automatic rejection.
 
 ## Project reference documents
 
@@ -69,6 +71,16 @@ Collect, embed, and print recommendations:
 python -m backend.run_recommendations
 ```
 
+Evaluate all stored jobs without loading embedding or Ollama models:
+
+```powershell
+python -m backend.evaluate_jobs
+```
+
+Results are stored in `job_eligibility_evaluations` with the profile version,
+decision, exact reasons, and evaluation time. Ineligible jobs remain in the
+database for audit but are excluded from semantic ranking.
+
 Run dependency-light unit tests:
 
 ```powershell
@@ -98,5 +110,5 @@ setup script after source selection and expiration behavior are finalized.
   entire database.
 
 See [`BUILD_ROADMAP.md`](BUILD_ROADMAP.md) for the revised implementation
-sequence. Complete [`docs/JOB_TOOL_DATA_INTAKE.md`](docs/JOB_TOOL_DATA_INTAKE.md)
-before the structured-profile and eligibility-filter implementation begins.
+sequence and [`docs/PROFILE_REVIEW.md`](docs/PROFILE_REVIEW.md) for the short
+list of profile choices that still need Patrick's review.

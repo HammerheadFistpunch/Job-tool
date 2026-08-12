@@ -33,25 +33,30 @@ Build an automated, local-first job intelligence system optimized for:
 - Deferred profile assumptions until Patrick completes the worksheet and
   supplies the resume/job evidence to structure.
 
-## Next: Structured candidate and eligibility model
+## Completed: Structured candidate and eligibility foundation
 
-1. Complete and import the intake worksheet as the source of search rules.
-2. Replace the single profile text blob with separate factual facets:
-   demonstrated experience, accomplishments, tools, industries, education,
-   target titles, adjacent titles, seniority, location, compensation, work
-   arrangement, preferences, and hard exclusions.
-3. Import factual career evidence from supplied profile and resume material.
-4. Add deterministic filters for geography, remote policy, absolute salary
-   floor, commission-only roles, junior/SDR roles, and required credentials.
-5. Store filter decisions and explanations without deleting filtered jobs.
-6. Add unit tests for every hard rule and ambiguous/missing source data.
+- Added a validated, versioned JSON candidate profile populated from known
+  preferences, resume facts, education, skills, and work history.
+- Added deterministic filters for location/relocation, remote regions, annual
+  salary floor, commission-only work, primary cold-calling, forced overtime,
+  and excluded junior sales/SDR titles.
+- Added `eligible`, `needs_review`, and `ineligible` results with exact evidence.
+- Added profile-versioned SQLite evaluation storage without deleting jobs.
+- Integrated eligibility into recommendations so hard rejects never reach
+  semantic ranking.
+- Added unit tests for hard rules, ambiguous data, profile validation, and
+  evaluation persistence.
 
-## Then: Review queue and evaluation
+## Next: Profile review and local review queue
 
-1. Add job states: new, saved, dismissed, applied, interviewed, rejected.
-2. Add personal labels: strong match, consider, weak match, reject, hard reject.
-3. Build a small local review interface with job links and filter explanations.
-4. Measure precision at 10, recall of strong matches, and hard-reject leakage.
+1. Resolve the short decision list in `docs/PROFILE_REVIEW.md` and issue a new
+   profile version.
+2. Add job review states: new, saved, dismissed, applied, interviewed, rejected.
+3. Add personal labels: strong match, consider, weak match, reject, hard reject.
+4. Build a small local review interface showing the job link, eligibility
+   decision, exact reasons, and current experimental score.
+5. Reevaluate stored jobs automatically when the profile version changes.
+6. Measure precision at 10 and hard-reject leakage from real review labels.
 
 ## Then: Matching quality
 
@@ -81,7 +86,6 @@ Build an automated, local-first job intelligence system optimized for:
 
 ## Current next build chunk
 
-Patrick completes `docs/JOB_TOOL_DATA_INTAKE.md`; then the application imports
-that worksheet and supplied resume evidence into structured candidate facets.
-Deterministic eligibility filters follow immediately. This must be completed
-before further tuning of semantic weights or skill extraction.
+Review the prepopulated profile's unresolved decisions, then build the local
+review queue and feedback labels. This creates the real evaluation data needed
+before semantic-weight tuning or Ollama reranking.

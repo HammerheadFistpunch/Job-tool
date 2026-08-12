@@ -89,6 +89,16 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             error_count INTEGER NOT NULL DEFAULT 0,
             errors_json TEXT NOT NULL DEFAULT '[]'
         );
+
+        CREATE TABLE IF NOT EXISTS job_eligibility_evaluations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+            profile_version TEXT NOT NULL,
+            status TEXT NOT NULL CHECK(status IN ('eligible', 'needs_review', 'ineligible')),
+            reasons_json TEXT NOT NULL DEFAULT '[]',
+            evaluated_at TEXT NOT NULL,
+            UNIQUE(job_id, profile_version)
+        );
         """
     )
 
@@ -108,7 +118,8 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             ON jobs(active, similarity_score DESC);
         CREATE INDEX IF NOT EXISTS ix_jobs_last_seen
             ON jobs(last_seen_at);
+        CREATE INDEX IF NOT EXISTS ix_job_eligibility_status
+            ON job_eligibility_evaluations(profile_version, status);
         """
     )
     connection.commit()
-

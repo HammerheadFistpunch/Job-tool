@@ -2,7 +2,7 @@
 
 **Repository:** `HammerheadFistpunch/Job-tool`  
 **Working branch:** `GPT_Redesign`  
-**Reference state:** Collection foundation complete; structured profile and eligibility filters planned next.
+**Reference state:** Collection and deterministic eligibility foundations complete; review queue planned next.
 
 ## System overview
 
@@ -75,7 +75,10 @@ This portion works technically, but the matching is not yet trustworthy enough f
 | Collection command | `backend/collect_jobs.py` | Runs collection without loading AI | Working |
 | Candidate profile | `data/input/Profiles/pr_profile.md` | Current source of candidate information | Working, but unstructured |
 | Profile loader | `backend/profile/loader.py` | Reads the Markdown profile | Working |
-| Candidate schema | `backend/profile/schema.py` | Early structured-profile definition | Scaffold only |
+| Candidate schema | `backend/profile/schema.py` | Validates versioned profile and search rules | Working |
+| Structured profile | `data/input/Profiles/patrick_profile.json` | Career evidence, targets, preferences, exclusions | Working; six decisions remain |
+| Eligibility engine | `backend/eligibility/engine.py` | Applies explainable hard filters before ranking | Working |
+| Eligibility command | `backend/evaluate_jobs.py` | Reevaluates stored jobs without AI models | Working |
 | Job normalizer | `backend/jobs/job_normalizer.py` | Prepares job text for embeddings | Working |
 | Embedding service | `backend/ai/embedding_service.py` | Creates semantic vectors using MiniLM | Experimental |
 | Job embedding service | `backend/jobs/job_embedding_service.py` | Embeds title, description, and metadata | Experimental |
@@ -89,12 +92,13 @@ This portion works technically, but the matching is not yet trustworthy enough f
 
 ## Database components
 
-The SQLite database currently contains two main tables:
+The SQLite database currently contains three main tables:
 
 | Table | Purpose |
 |---|---|
 | `jobs` | Stores complete job postings, URLs, source IDs, timestamps, status, and source data |
 | `collection_runs` | Records when collection ran, how many jobs were found, and any source failures |
+| `job_eligibility_evaluations` | Stores profile-versioned decisions, reasons, evidence, and evaluation time |
 
 Jobs are uniquely identified by:
 
@@ -130,7 +134,7 @@ updated_at
 raw source data
 ```
 
-## Next components to build
+## Current decision flow
 
 The next chunk sits between storage and ranking:
 
@@ -140,20 +144,24 @@ flowchart TD
     C["Structured candidate profile"] --> B
     B --> D["Eligible jobs"]
     B --> E["Rejected jobs with reasons"]
-    D --> F["Improved matching"]
+    D --> F["Experimental matching"]
+    E --> G["Audit history"]
 ```
 
-That chunk should add:
+This layer now provides:
 
-- Structured work history, skills, accomplishments, target roles, and preferences.
-- Salary, location, remote-work, seniority, and hard-rejection rules.
+- Structured work history, skills, target roles, preferences, and exclusions.
+- Salary, location, remote-work, relocation, sales, and overtime filters.
 - A result for every job: `eligible`, `ineligible`, or `needs_review`.
-- Specific reasons such as “below salary floor” or “location uncertain.”
+- Specific stored reasons such as “below salary floor” or “distance uncertain.”
 - Tests proving hard requirements cannot be overridden by semantic similarity.
 
 ## Plain-language status
 
-The tool can now reliably **find and remember jobs**. The next step teaches it which jobs should be considered at all. After that, the matching system can be improved to determine which eligible jobs are genuinely strong matches.
+The tool can now reliably **find, remember, and screen jobs**. The next step is a
+small local review queue so Patrick can label real results. Those labels will
+provide the evidence needed to improve matching quality rather than guessing at
+weights.
 
 ## Planned end-state workflow
 
@@ -168,4 +176,3 @@ flowchart TD
     G --> H["User feedback"]
     H --> I["Evaluation and tuning"]
 ```
-

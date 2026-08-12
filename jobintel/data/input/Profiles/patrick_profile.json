@@ -1,0 +1,135 @@
+{
+  "profile_version": "2026-08-12.1",
+  "professional_name": "Patrick Rich",
+  "location": {
+    "home_city": "Sandy",
+    "home_state": "Utah",
+    "max_distance_miles": 30,
+    "remote_accepted": true,
+    "relocation_accepted": false,
+    "accepted_localities": [
+      "Sandy",
+      "Salt Lake City",
+      "Draper",
+      "South Jordan",
+      "Lehi",
+      "Murray",
+      "Midvale",
+      "Cottonwood Heights",
+      "West Jordan"
+    ],
+    "missing_location": "needs_review"
+  },
+  "compensation": {
+    "absolute_base_floor": 75000,
+    "target_base_min": 90000,
+    "target_base_max": 130000,
+    "missing_salary": "needs_review"
+  },
+  "target_titles": [
+    "Director of Technical Marketing",
+    "Technical Product Marketing Manager",
+    "Head of Strategic Communications",
+    "Strategic Communications Manager",
+    "Content Strategy Director"
+  ],
+  "adjacent_titles": [
+    "Senior Product Marketing Manager",
+    "Internal Communications Manager",
+    "Executive Communications Manager",
+    "Technical Content Strategist",
+    "Creative Production Manager",
+    "Senior Communications Strategist"
+  ],
+  "excluded_title_patterns": [
+    "\\b(sales development|business development) representative\\b",
+    "\\bappointment setter\\b",
+    "\\bjunior sales\\b"
+  ],
+  "hard_rejection_phrases": {
+    "commission_only": ["commission only", "commission-only", "100% commission"],
+    "cold_calling_primary": ["primarily cold calling", "primary responsibility is cold calling", "high-volume cold calling"],
+    "forced_overtime": ["mandatory overtime", "required overtime", "must work overtime"]
+  },
+  "preferred_organization_traits": [
+    "technically honest",
+    "builder-oriented",
+    "cross-functional collaboration",
+    "stable strategic direction"
+  ],
+  "demonstrated_skills": [
+    "strategic communications",
+    "content strategy",
+    "technical translation",
+    "internal communications",
+    "executive communications",
+    "live broadcast production",
+    "video production",
+    "studio operations",
+    "copywriting",
+    "analytics reporting",
+    "event coordination",
+    "Adobe Creative Suite",
+    "After Effects",
+    "DaVinci Resolve",
+    "Git and GitHub",
+    "Cloudflare Pages",
+    "Astro",
+    "TinaCMS"
+  ],
+  "education": [
+    "Professional MBA, Leadership and Strategy, Utah State University, 2022",
+    "BS, Mass Communication - New Media, University of Utah, 2009",
+    "Associate degree, Salt Lake Community College, 2007"
+  ],
+  "work_history": [
+    {
+      "employer": "Salt Lake County Health Department",
+      "title": "Marketing Coordinator",
+      "start_year": 2024,
+      "end_year": null,
+      "evidence": [
+        "Brought large-format printing in-house, reducing costs by approximately 75%.",
+        "Modernized video infrastructure and live-stream workflows.",
+        "Developed targeted social campaigns."
+      ]
+    },
+    {
+      "employer": "Intermountain Health",
+      "title": "Creative Producer / Communications",
+      "start_year": 2011,
+      "end_year": 2024,
+      "evidence": [
+        "Managed studio operations and supported C-suite communications.",
+        "Produced more than 200 broadcasts during 2020.",
+        "Delivered live and recorded COVID-19 communications."
+      ]
+    },
+    {
+      "employer": "Sorenson Media",
+      "title": "Video Producer",
+      "start_year": 2009,
+      "end_year": 2011,
+      "evidence": [
+        "Produced video, After Effects compositing, and compression work."
+      ]
+    },
+    {
+      "employer": "Freelance",
+      "title": "Automotive Writer",
+      "start_year": 2014,
+      "end_year": null,
+      "evidence": [
+        "Published automotive work with Jalopnik, AutoAnything, and Overlander."
+      ]
+    }
+  ],
+  "unresolved_decisions": [
+    "Maximum acceptable office days per week for hybrid roles",
+    "Maximum acceptable travel percentage",
+    "Treatment of contract, part-time, and temporary roles",
+    "Whether salary-missing jobs should remain needs_review or be provisionally eligible",
+    "Exact credential and security-clearance rejection policy",
+    "Whether senior individual-contributor roles should receive the same preference as manager roles"
+  ]
+}

@@ -174,7 +174,7 @@ class JobStore:
     def list_active_jobs(self) -> list[dict[str, Any]]:
         rows = self.connection.execute(
             """
-            SELECT external_id AS id, source, company, title, location, description,
+            SELECT id AS database_id, external_id AS id, source, company, title, location, description,
                    canonical_url, source_url, posted_at, updated_at
             FROM jobs WHERE active = 1
             ORDER BY last_seen_at DESC, id DESC
@@ -182,3 +182,46 @@ class JobStore:
         ).fetchall()
         return [dict(row) for row in rows]
 
+    def save_eligibility_evaluation(
+        self, job_id: int, profile_version: str, decision: Any
+    ) -> None:
+        """Persist an explainable result without changing or deleting the job."""
+
+        payload = decision.to_dict()
+        self.connection.execute(
+            """
+            INSERT INTO job_eligibility_evaluations(
+                job_id, profile_version, status, reasons_json, evaluated_at
+            ) VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(job_id, profile_version) DO UPDATE SET
+                status = excluded.status,
+                reasons_json = excluded.reasons_json,
+                evaluated_at = excluded.evaluated_at
+            """,
+            (
+                job_id, profile_version, decision.status,
+                json.dumps(payload["reasons"], ensure_ascii=False), utc_now(),
+            ),
+        )
+        self.connection.commit()
+
+    def list_eligibility_evaluations(self, profile_version: str) -> list[dict[str, Any]]:
+        rows = self.connection.execute(
+            """
+            SELECT j.external_id, j.company, j.title, j.canonical_url,
+                   e.status, e.reasons_json, e.evaluated_at
+            FROM job_eligibility_evaluations e
+            JOIN jobs j ON j.id = e.job_id
+            WHERE e.profile_version = ?
+            ORDER BY CASE e.status
+                WHEN 'eligible' THEN 0 WHEN 'needs_review' THEN 1 ELSE 2 END,
+                j.title
+            """,
+            (profile_version,),
+        ).fetchall()
+        results = []
+        for row in rows:
+            result = dict(row)
+            result["reasons"] = json.loads(result.pop("reasons_json"))
+            results.append(result)
+        return results

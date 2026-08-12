@@ -5,6 +5,8 @@ from backend.ai.skill_extractor import SkillExtractor
 from backend.jobs.job_ingestion import JobIngestionPipeline
 from backend.ai.ranking_engine import RankingEngine
 from backend.storage.job_store import JobStore
+from backend.eligibility import EligibilityEvaluator
+from backend.profile.loader import load_structured_profile
 
 
 def load_profile():
@@ -17,6 +19,8 @@ def run():
 
     # profile
     profile_text = load_profile()
+    structured_profile = load_structured_profile()
+    eligibility_evaluator = EligibilityEvaluator(structured_profile)
 
     skill_extractor = SkillExtractor()
 
@@ -36,6 +40,18 @@ def run():
             summary = store.upsert_jobs(collected_jobs)
             store.finish_collection_run(run_id, summary, collection_errors)
             jobs = store.list_active_jobs()
+            eligible_jobs = []
+            eligibility_counts = {"eligible": 0, "needs_review": 0, "ineligible": 0}
+            for job in jobs:
+                decision = eligibility_evaluator.evaluate(job)
+                store.save_eligibility_evaluation(
+                    job["database_id"], structured_profile.profile_version, decision
+                )
+                eligibility_counts[decision.status] += 1
+                if decision.status != "ineligible":
+                    job["eligibility_status"] = decision.status
+                    job["eligibility_reasons"] = decision.to_dict()["reasons"]
+                    eligible_jobs.append(job)
         except Exception as error:
             store.fail_collection_run(run_id, error)
             raise
@@ -47,15 +63,22 @@ def run():
     if collection_errors:
         print(f"[WARN] Collection sources failed: {len(collection_errors)}")
 
-    embedder = JobEmbeddingService()
-    embedded_jobs = embedder.embed_jobs(jobs)
+    print(
+        "[3] Eligibility | "
+        f"eligible: {eligibility_counts['eligible']} | "
+        f"needs review: {eligibility_counts['needs_review']} | "
+        f"ineligible: {eligibility_counts['ineligible']}"
+    )
 
-    print("[3] Jobs embedded")
+    embedder = JobEmbeddingService()
+    embedded_jobs = embedder.embed_jobs(eligible_jobs)
+
+    print("[4] Eligible and reviewable jobs embedded")
 
     engine = RankingEngine(profile_vector, profile_skills)
     ranked = engine.rank_jobs(embedded_jobs)
 
-    print("[4] Ranking complete")
+    print("[5] Ranking complete")
 
     print("\n=== TOP JOB MATCHES ===\n")
 
@@ -63,6 +86,7 @@ def run():
         print(
             f"{i}. {job['title']} @ {job['company']} "
             f"Score: {job['score']:.4f} "
+            f"Eligibility: {job['eligibility_status']} "
             f"Skills: {job['skills']}"
         )
         if job.get("canonical_url"):
