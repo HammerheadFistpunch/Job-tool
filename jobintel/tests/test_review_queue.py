@@ -95,6 +95,31 @@ class ReviewQueueTests(unittest.TestCase):
             }
         self.assertEqual(versions, {"2026-08-12.1", "2026-08-12.2"})
 
+    def test_diversity_cap_hides_only_excess_unreviewed_jobs(self):
+        with JobStore(self.database) as store:
+            store.upsert_jobs([{
+                "external_id": f"extra-{index}",
+                "source": "test",
+                "company": "Builder Company",
+                "title": f"Technical Marketing Manager {index}",
+                "location": "Remote - US",
+                "description": "Base salary: $100,000-$125,000.",
+                "canonical_url": f"https://example.test/extra-{index}",
+            } for index in range(12)])
+        jobs = self.service.list_jobs()
+        reviewable = [job for job in jobs if job["eligibility_status"] != "ineligible"]
+        self.assertEqual(len(reviewable), 10)
+
+        visible_before = {job["database_id"] for job in jobs}
+        with JobStore(self.database) as store:
+            hidden_id = next(
+                job["database_id"] for job in store.list_active_jobs()
+                if job["database_id"] not in visible_before
+            )
+        self.service.save_review(hidden_id, "saved", "consider", [], "Keep visible")
+        visible_ids = {job["database_id"] for job in self.service.list_jobs()}
+        self.assertIn(hidden_id, visible_ids)
+
 
 if __name__ == "__main__":
     unittest.main()

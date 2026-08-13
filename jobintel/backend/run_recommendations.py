@@ -34,10 +34,18 @@ def run():
     with JobStore() as store:
         run_id = store.start_collection_run()
         try:
-            raw_jobs, collection_errors = aggregator.fetch_all_jobs_with_report()
+            raw_jobs, collection_errors, reports = aggregator.fetch_all_jobs_with_report()
             ingestion = JobIngestionPipeline()
             collected_jobs = ingestion.load_from_list(raw_jobs)
             summary = store.upsert_jobs(collected_jobs)
+            for report in reports:
+                if report["status"] == "success":
+                    report["expired"] = store.expire_missing_from_source(
+                        report["source"], report.get("scope") or report["company"],
+                        report["external_ids"],
+                    )
+                    summary.expired += report["expired"]
+            store.record_source_results(run_id, reports)
             store.finish_collection_run(run_id, summary, collection_errors)
             jobs = store.list_active_jobs()
             eligible_jobs = []

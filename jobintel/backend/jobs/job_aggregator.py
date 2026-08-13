@@ -2,6 +2,7 @@ from pathlib import Path
 
 from backend.jobs.fetchers.greenhouse_fetcher import GreenhouseFetcher
 from backend.jobs.fetchers.lever_fetcher import LeverFetcher
+from backend.jobs.fetchers.jobicy_fetcher import JobicyFetcher
 from backend.jobs.prefilter import MarketPrefilter
 from backend.jobs.source_config import DEFAULT_SOURCE_CONFIG, load_source_config
 
@@ -21,7 +22,7 @@ class JobAggregator:
         else:
             configuration = load_source_config(config_path or DEFAULT_SOURCE_CONFIG)
             self.filter = MarketPrefilter(configuration.get("filters"))
-            self.sources = self._load_sources(configuration)
+            self.sources = self._load_sources(configuration) + self._load_discovery_sources(configuration)
         if not hasattr(self, "filter"):
             self.filter = MarketPrefilter({"enabled": False})
 
@@ -41,6 +42,23 @@ class JobAggregator:
             sources.append(fetcher)
         return sources
 
+    def _load_discovery_sources(self, configuration):
+        sources = []
+        for provider in configuration.get("discovery_sources", []):
+            if not provider.get("enabled", True):
+                continue
+            source_type = str(provider.get("type", "")).lower()
+            if source_type != "jobicy":
+                raise ValueError(f"Unsupported discovery source type: {source_type}")
+            defaults = {
+                key: value for key, value in provider.items()
+                if key not in {"queries", "enabled", "type"}
+            }
+            for query in provider.get("queries", []):
+                if query.get("enabled", True):
+                    sources.append(JobicyFetcher(dict(defaults, **query)))
+        return sources
+
     def fetch_all_jobs(self):
         jobs, _errors, _reports = self.fetch_all_jobs_with_report()
         return jobs
@@ -53,14 +71,25 @@ class JobAggregator:
         for source in self.sources:
             try:
                 jobs = source.fetch()
-                for job in jobs or []:
-                    job["company"] = getattr(source, "display_name", source.company)
+                if getattr(source, "is_employer_source", True):
+                    for job in jobs or []:
+                        job["company"] = getattr(source, "display_name", source.company)
                 accepted, filtered = self.filter.filter(jobs or [])
                 all_jobs.extend(accepted)
+                source_name = getattr(
+                    source, "source_name",
+                    source.__class__.__name__.replace("Fetcher", "").lower(),
+                )
                 reports.append({
-                    "source": source.__class__.__name__.replace("Fetcher", "").lower(),
+                    "source": source_name,
                     "company": getattr(source, "display_name", getattr(source, "company", "")),
                     "token": getattr(source, "company", ""),
+                    "scope": getattr(source, "scope", getattr(source, "display_name", source.company)),
+                    "query_name": getattr(source, "query_name", ""),
+                    "query_params": getattr(source, "params", {}),
+                    "location_scope": getattr(source, "location_scope", ""),
+                    "provider_count": getattr(source, "provider_count", len(jobs or [])),
+                    "rate_limit": getattr(source, "rate_limit", {}),
                     "status": "success",
                     "fetched": len(jobs or []),
                     "accepted": len(accepted),
@@ -69,9 +98,18 @@ class JobAggregator:
                 })
             except Exception as error:
                 failure = {
-                    "source": source.__class__.__name__.replace("Fetcher", "").lower(),
+                    "source": getattr(
+                        source, "source_name",
+                        source.__class__.__name__.replace("Fetcher", "").lower(),
+                    ),
                     "company": getattr(source, "display_name", getattr(source, "company", "")),
                     "token": getattr(source, "company", ""),
+                    "scope": getattr(source, "scope", getattr(source, "display_name", source.company)),
+                    "query_name": getattr(source, "query_name", ""),
+                    "query_params": getattr(source, "params", {}),
+                    "location_scope": getattr(source, "location_scope", ""),
+                    "provider_count": getattr(source, "provider_count", 0),
+                    "rate_limit": getattr(source, "rate_limit", {}),
                     "error": str(error),
                 }
                 errors.append(failure)

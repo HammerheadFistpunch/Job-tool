@@ -92,29 +92,24 @@ Build an automated, local-first job intelligence system optimized for:
 - Live smoke run retained 76 relevant postings across 9 employers with 14
   successful board checks; valid boards with zero current matches remain healthy.
 
-## Current blocker: Employer-biased discovery
+## Completed: Query-based market discovery
 
-The target-machine run returned 77 active jobs, but the queue remained dominated
-by Stripe, Airbnb, and Dropbox. The source-registry work is operationally sound,
-but adding individual company boards does not provide broad market discovery.
-This batch must not be used to tune matching or establish precision metrics.
+Added configurable, no-key Jobicy searches across employers while retaining the
+direct Greenhouse and Lever boards. Records now carry query/location scopes and
+provider attribution. Cross-provider duplicates share one stable job record and
+review identity while distinct openings from the same provider remain separate.
+Successful query expiration cannot deactivate a job still active through
+another board or query.
 
-## Next: Query-based market discovery
+Implemented scope:
 
-1. Add one or more broad sources that accept role and location queries across
-   employers. Keep direct Greenhouse and Lever boards as supplemental sources.
-2. Centralize configurable queries for target roles, remote-US work, and the
-   Sandy/Salt Lake-area market.
-3. Normalize broad-source results into the existing ingestion pipeline and
-   deduplicate overlaps with direct ATS postings.
-4. Preserve canonical links, provider attribution, query attribution, and raw
-   source records.
-5. Record per-query fetched/accepted/filtered/error counts, rate limits, and last
-   successful collection.
-6. Treat API-backed providers as optional integrations. Missing keys or provider
-   outages must not stop ATS collection or eligibility evaluation.
-7. Add tests for pagination, query construction, normalization, cross-source
-   deduplication, partial failures, and safe expiration behavior.
+1. Six named queries cover target remote-US roles and explicitly report the
+   Utah-area query even when it yields zero matches.
+2. Per-query provider/fetched/accepted/filtered/error and rate-limit metadata is
+   stored and displayed in source health.
+3. A configurable cap limits only unreviewed reviewable jobs per employer;
+   underlying jobs, eligibility, and completed reviews remain intact.
+4. `backend.discovery_report` evaluates the documented acceptance criteria.
 
 ### Discovery acceptance criteria
 
@@ -125,6 +120,12 @@ This batch must not be used to tune matching or establish precision metrics.
   report, even when one query yields zero matches.
 - Every enabled source/query reports success, failure, and result counts.
 - Repeated runs do not create duplicate jobs or erase review history.
+
+All criteria passed in an isolated August 13, 2026 live validation: 107 active
+jobs, 35 employers, 56 visible reviewable jobs across 29 employers, and a 17.86%
+largest-employer share. A consecutive run reported 0 new, 0 updated, and 134
+unchanged discoveries and preserved a saved review marker. The suite contains
+51 passing tests.
 
 ## Then: Real-job evaluation baseline
 
@@ -160,5 +161,7 @@ This batch must not be used to tune matching or establish precision metrics.
 
 ## Current next build chunk
 
-Implement query-based broad market discovery and meet the diversity acceptance
-criteria above. Do not request user labels or tune matching until then.
+Run the migration and collection on Patrick's persistent Windows database, then
+label approximately 20–30 jobs from the diverse queue and capture the first
+real-job evaluation baseline. Do not tune semantic weights or benchmark Ollama
+until those labels exist.

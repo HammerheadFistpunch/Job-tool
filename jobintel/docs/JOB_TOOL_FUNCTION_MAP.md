@@ -2,14 +2,14 @@
 
 **Repository:** `HammerheadFistpunch/Job-tool`  
 **Working branch:** `GPT_Redesign`  
-**Reference state:** Direct ATS collection, deterministic eligibility, and the
-review queue work; broad market discovery is the current blocker.
+**Reference state:** Broad discovery, direct ATS collection, deterministic
+eligibility, and the diverse review queue are working; real-job labeling is next.
 
 ## System overview
 
 ```mermaid
 flowchart TD
-    A["ATS Sources<br/>Greenhouse / Lever"] --> B["Fetch jobs"]
+    A["Direct ATS + Jobicy queries"] --> B["Fetch jobs"]
     B --> C["Normalize records"]
     C --> D["SQLite storage"]
     D --> E["Deduplicate and update"]
@@ -70,6 +70,7 @@ This portion works technically, but the matching is not yet trustworthy enough f
 | Job aggregator | `backend/jobs/job_aggregator.py` | Runs all enabled job sources | Working |
 | Greenhouse fetcher | `backend/jobs/fetchers/greenhouse_fetcher.py` | Downloads complete Greenhouse postings | Working |
 | Lever fetcher | `backend/jobs/fetchers/lever_fetcher.py` | Downloads complete Lever postings | Working |
+| Jobicy fetcher | `backend/jobs/fetchers/jobicy_fetcher.py` | Runs no-key remote-US and Utah-scoped role queries | Working |
 | Ingestion pipeline | `backend/jobs/job_ingestion.py` | Gives every job the same fields | Working |
 | Job store | `backend/storage/job_store.py` | Saves, updates, and deduplicates jobs | Working |
 | Database manager | `backend/storage/database.py` | Creates and upgrades the SQLite database | Working |
@@ -97,6 +98,9 @@ This portion works technically, but the matching is not yet trustworthy enough f
 | Source management | `backend/jobs/source_config.py`, `main.py` | Toggle boards and inspect health | Working |
 | Market prefilter | `backend/jobs/prefilter.py` | Reject obvious wrong-role/wrong-location records before storage | Working |
 | Posting expiration | `backend/storage/job_store.py` | Deactivate missing jobs after a successful source fetch | Working |
+| Discovery attribution | `job_discoveries` table | Preserves source/query provenance and overlap lifecycle | Working |
+| Discovery report | `backend/discovery_report.py` | Validates employer diversity and query health | Working |
+| Queue diversity | `backend/review/service.py` | Caps only new reviewable jobs per employer | Working |
 | Scheduler setup | Not built | Automatically installs scheduled collection | Collection command is scheduler-ready |
 
 ## Database components
@@ -168,12 +172,10 @@ This layer now provides:
 
 ## Plain-language status
 
-The tool can reliably **collect configured company boards, remember postings,
-screen them, and present them for review**. It cannot yet discover a sufficiently
-broad cross-employer market. The latest 77-job target-machine run remained
-dominated by three companies, so the current queue should not be labeled for
-matching evaluation. Query-based remote-US and Utah discovery is the next
-required component.
+The tool can reliably **discover across employers, collect preferred company
+boards, remember postings, screen them, and present a diverse queue for
+review**. The August 13 live validation passed every documented discovery check.
+The next useful evidence is Patrick's labels on approximately 20–30 real jobs.
 
 ## Planned end-state workflow
 

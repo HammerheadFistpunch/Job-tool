@@ -58,7 +58,7 @@ def sources():
     configuration = load_source_config()
     with JobStore() as store:
         health = {
-            (row["source"], row["company"].lower()): row
+            (row["source"], row["scope"].lower()): row
             for row in store.list_source_health()
         }
     results = []
@@ -67,6 +67,17 @@ def sources():
         name = str(source.get("display_name") or source["company"]).lower()
         item["health"] = health.get((source["type"], name))
         results.append(item)
+    for provider in configuration.get("discovery_sources", []):
+        for query in provider.get("queries", []):
+            item = dict(query)
+            item.update({
+                "type": provider["type"],
+                "company": query["name"],
+                "enabled": provider.get("enabled", True) and query.get("enabled", True),
+                "read_only": True,
+                "health": health.get((provider["type"], query["name"].lower())),
+            })
+            results.append(item)
     return {"filters": configuration["filters"], "sources": results}
 
 
@@ -104,13 +115,13 @@ REVIEW_QUEUE_HTML = r'''<!doctype html>
 <select id="eligibility"><option value="">All eligibility</option><option>eligible</option><option>needs_review</option><option>ineligible</option></select>
 <select id="state"><option value="">All review states</option><option>new</option><option>saved</option><option>dismissed</option><option>applied</option><option>interviewed</option><option>rejected</option></select>
 <input id="search" type="search" placeholder="Search title or company"><button id="reload">Refresh</button><button id="manage-sources">Sources</button></div></header>
-<main><section id="sources-panel" hidden><h2>Collection sources</h2><p class="meta">Enable or disable boards here. Changes apply to the next collection run.</p><div id="sources"></div></section><div id="summary">Loading…</div><div id="jobs"></div></main><script>
+<main><section id="sources-panel" hidden><h2>Collection sources</h2><p class="meta">Direct boards can be enabled here. Query sources are configured in job_sources.json and report each remote-US or Utah search separately.</p><div id="sources"></div></section><div id="summary">Loading…</div><div id="jobs"></div></main><script>
 const states=['new','saved','dismissed','applied','interviewed','rejected'],labels=['','strong_match','consider','weak_match','reject','hard_reject'],reasons=['responsibilities_fit','strong_evidence_match','career_progression','preferred_industry','compensation','location_or_remote_fit','organization_or_mission','learning_opportunity','seniority_mismatch','sales_or_quota_emphasis','missing_required_qualification','schedule_travel_or_workload','poor_organization_signals'];let allJobs=[],profileVersion='';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const options=(items,current)=>items.map(v=>`<option ${v===current?'selected':''}>${esc(v)}</option>`).join('');
 const reasonOptions=current=>reasons.map(v=>`<option value="${v}" ${current.includes(v)?'selected':''}>${esc(v.replaceAll('_',' '))}</option>`).join('');
 async function load(){const response=await fetch('/api/jobs');if(!response.ok)throw new Error(await response.text());const data=await response.json();allJobs=data.jobs;profileVersion=data.profile_version;render()}
-async function loadSources(){const response=await fetch('/api/sources'),data=await response.json();document.querySelector('#sources').innerHTML=data.sources.map(s=>{const h=s.health,status=h?h.status:'not run';return `<div class="source"><div><strong>${esc(s.display_name||s.company)}</strong><br><small>${esc(s.type)} · ${esc(s.company)}</small></div><span class="${status==='success'?'healthy':'failed'}">${esc(status)}</span><span>${h?`${h.accepted_count} kept`:''}</span><button onclick="toggleSource('${esc(s.type)}','${esc(s.company)}',${!s.enabled})">${s.enabled?'Disable':'Enable'}</button></div>`}).join('')}
+async function loadSources(){const response=await fetch('/api/sources'),data=await response.json();document.querySelector('#sources').innerHTML=data.sources.map(s=>{const h=s.health,status=h?h.status:'not run',action=s.read_only?'<span class="meta">config</span>':`<button onclick="toggleSource('${esc(s.type)}','${esc(s.company)}',${!s.enabled})">${s.enabled?'Disable':'Enable'}</button>`;return `<div class="source"><div><strong>${esc(s.display_name||s.company)}</strong><br><small>${esc(s.type)} · ${esc(s.location_scope||s.company)}</small></div><span class="${status==='success'?'healthy':'failed'}">${esc(status)}</span><span>${h?`${h.accepted_count} kept / ${h.provider_count} found`:''}</span>${action}</div>`}).join('')}
 async function toggleSource(type,company,enabled){await fetch(`/api/sources/${encodeURIComponent(type)}/${encodeURIComponent(company)}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled})});loadSources()}
 function render(){const e=document.querySelector('#eligibility').value,s=document.querySelector('#state').value,q=document.querySelector('#search').value.toLowerCase();const jobs=allJobs.filter(j=>(!e||j.eligibility_status===e)&&(!s||j.review_state===s)&&(!q||`${j.title} ${j.company}`.toLowerCase().includes(q)));document.querySelector('#summary').textContent=`${jobs.length} of ${allJobs.length} jobs · profile ${profileVersion}`;document.querySelector('#jobs').innerHTML=jobs.length?jobs.map(card).join(''):'<div class="empty">No jobs match these filters.</div>'}
 function card(j){const eligibilityReasons=j.eligibility_reasons.map(r=>`<li><strong>${esc(r.explanation)}</strong>${r.evidence?`<div class="reason">Evidence: ${esc(r.evidence)}</div>`:''}</li>`).join('');return `<article class="job" data-id="${j.database_id}"><h2>${j.canonical_url?`<a href="${esc(j.canonical_url)}" target="_blank" rel="noopener">${esc(j.title)}</a>`:esc(j.title)}</h2><div class="meta">${esc(j.company)} · ${esc(j.location||'Location not stated')} · ${esc(j.source)}</div><div class="badges"><span class="badge ${j.eligibility_status}">${esc(j.eligibility_status)}</span><span class="badge">${esc(j.review_state)}</span>${j.match_label?`<span class="badge">${esc(j.match_label)}</span>`:''}</div><details><summary>Eligibility explanation</summary><ul>${eligibilityReasons}</ul></details><details><summary>Posting text</summary><p>${esc(j.description).replace(/\n/g,'<br>')}</p></details><div class="review"><select class="review-state" aria-label="Review state">${options(states,j.review_state)}</select><select class="match-label" aria-label="Match label">${options(labels,j.match_label||'')}</select><select class="review-reasons" multiple aria-label="Interest or rejection reasons">${reasonOptions(j.reason_codes)}</select><textarea class="notes" placeholder="Notes">${esc(j.notes)}</textarea><button onclick="save(${j.database_id})">Save review</button></div></article>`}

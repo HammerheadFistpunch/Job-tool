@@ -44,10 +44,21 @@ JOB_COLUMNS = {
     "active": "INTEGER NOT NULL DEFAULT 1",
     "raw_json": "TEXT",
     "similarity_score": "REAL",
+    "canonical_key": "TEXT",
+    "identity_key": "TEXT",
 }
 
 ELIGIBILITY_COLUMNS = {
     "job_content_hash": "TEXT",
+}
+
+SOURCE_RESULT_COLUMNS = {
+    "scope": "TEXT NOT NULL DEFAULT ''",
+    "query_name": "TEXT NOT NULL DEFAULT ''",
+    "query_json": "TEXT NOT NULL DEFAULT '{}'",
+    "location_scope": "TEXT NOT NULL DEFAULT ''",
+    "provider_count": "INTEGER NOT NULL DEFAULT 0",
+    "rate_limit_json": "TEXT NOT NULL DEFAULT '{}'",
 }
 
 
@@ -128,6 +139,22 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             notes TEXT NOT NULL DEFAULT '',
             updated_at TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS job_discoveries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+            source TEXT NOT NULL,
+            external_id TEXT NOT NULL,
+            scope TEXT NOT NULL DEFAULT '',
+            query_name TEXT NOT NULL DEFAULT '',
+            location_scope TEXT NOT NULL DEFAULT '',
+            canonical_url TEXT,
+            raw_json TEXT NOT NULL DEFAULT '{}',
+            first_seen_at TEXT NOT NULL,
+            last_seen_at TEXT NOT NULL,
+            active INTEGER NOT NULL DEFAULT 1,
+            UNIQUE(source, external_id, scope)
+        );
         """
     )
 
@@ -145,6 +172,13 @@ def initialize_database(connection: sqlite3.Connection) -> None:
                 f"ALTER TABLE job_eligibility_evaluations ADD COLUMN {name} {definition}"
             )
 
+    existing_source_results = _column_names(connection, "collection_source_results")
+    for name, definition in SOURCE_RESULT_COLUMNS.items():
+        if name not in existing_source_results:
+            connection.execute(
+                f"ALTER TABLE collection_source_results ADD COLUMN {name} {definition}"
+            )
+
     connection.executescript(
         """
         CREATE UNIQUE INDEX IF NOT EXISTS ux_jobs_source_external_id
@@ -154,12 +188,22 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             ON jobs(active, similarity_score DESC);
         CREATE INDEX IF NOT EXISTS ix_jobs_last_seen
             ON jobs(last_seen_at);
+        CREATE INDEX IF NOT EXISTS ix_jobs_canonical_key
+            ON jobs(canonical_key);
+        CREATE INDEX IF NOT EXISTS ix_jobs_identity_key
+            ON jobs(identity_key);
         CREATE INDEX IF NOT EXISTS ix_job_eligibility_status
             ON job_eligibility_evaluations(profile_version, status);
         CREATE INDEX IF NOT EXISTS ix_job_reviews_state_label
             ON job_reviews(review_state, match_label);
         CREATE INDEX IF NOT EXISTS ix_collection_source_results_run
             ON collection_source_results(run_id, status);
+        CREATE INDEX IF NOT EXISTS ix_collection_source_results_scope
+            ON collection_source_results(source, scope, id DESC);
+        CREATE INDEX IF NOT EXISTS ix_job_discoveries_job_active
+            ON job_discoveries(job_id, active);
+        CREATE INDEX IF NOT EXISTS ix_job_discoveries_scope
+            ON job_discoveries(source, scope, active);
         """
     )
     connection.commit()

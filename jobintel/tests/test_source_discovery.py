@@ -39,6 +39,19 @@ class SourceConfigurationTests(unittest.TestCase):
             self.assertFalse(data["sources"][0]["enabled"])
             self.assertTrue(data["filters"]["enabled"])
 
+    def test_loads_named_discovery_queries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sources.json"
+            path.write_text(json.dumps({
+                "sources": [],
+                "discovery_sources": [{
+                    "type": "jobicy",
+                    "queries": [{"name": "remote_marketing", "tag": "marketing"}],
+                }],
+            }), encoding="utf-8")
+            data = load_source_config(path)
+            self.assertEqual(data["discovery_sources"][0]["queries"][0]["name"], "remote_marketing")
+
 
 class SourceExpirationTests(unittest.TestCase):
     def test_only_missing_jobs_on_successful_source_are_expired(self):
@@ -61,6 +74,25 @@ class SourceExpirationTests(unittest.TestCase):
                 store.upsert_jobs([{"external_id": "old", "source": "lever", "company": "Example", "title": "Content Lead"}])
                 self.assertEqual(store.expire_missing_from_source("lever", "Example", []), 1)
                 self.assertEqual(store.list_active_jobs(), [])
+
+    def test_expiring_one_query_preserves_job_found_by_another_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with JobStore(Path(directory) / "test.db") as store:
+                direct = {
+                    "external_id": "direct-1", "source": "greenhouse",
+                    "company": "Example", "title": "Marketing Manager",
+                    "location": "Remote", "canonical_url": "https://example.test/jobs/1",
+                }
+                broad = dict(
+                    direct, external_id="broad-1", source="jobicy",
+                    canonical_url="https://jobicy.com/jobs/1-example",
+                    discovery_scope="remote_marketing",
+                )
+                store.upsert_jobs([direct, broad])
+                self.assertEqual(
+                    store.expire_missing_from_source("jobicy", "remote_marketing", []), 0
+                )
+                self.assertEqual(len(store.list_active_jobs()), 1)
 
 
 if __name__ == "__main__":

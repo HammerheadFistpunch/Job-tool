@@ -5,6 +5,28 @@
     "excluded_title_terms": ["sales development representative", "account executive", "recruiter", "software engineer", "data scientist"],
     "location_terms": ["remote", "united states", "usa", "utah", "salt lake", "sandy", "lehi", "draper", "south jordan", "murray", "cottonwood", "provo", "orem", "american fork"]
   },
+  "discovery_sources": [
+    {
+      "type": "jobicy",
+      "enabled": true,
+      "count": 100,
+      "geo": "usa",
+      "queries": [
+        {"name": "remote_technical_marketing", "display_name": "Remote US — Technical Marketing", "tag": "technical marketing", "location_scope": "remote_us"},
+        {"name": "remote_product_marketing", "display_name": "Remote US — Product Marketing", "tag": "product marketing", "location_scope": "remote_us"},
+        {"name": "remote_strategic_communications", "display_name": "Remote US — Strategic Communications", "tag": "strategic communications", "location_scope": "remote_us"},
+        {"name": "remote_content_strategy", "display_name": "Remote US — Content Strategy", "tag": "content strategy", "location_scope": "remote_us"},
+        {"name": "remote_creative_video", "display_name": "Remote US — Creative and Video", "tag": "creative video", "location_scope": "remote_us"},
+        {
+          "name": "utah_marketing_communications",
+          "display_name": "Utah — Marketing and Communications",
+          "tag": "marketing communications",
+          "location_scope": "utah_area",
+          "required_location_terms": ["utah", "salt lake", "sandy", "lehi", "draper", "south jordan", "murray", "cottonwood", "provo", "orem", "american fork"]
+        }
+      ]
+    }
+  ],
   "sources": [
     {"type": "greenhouse", "company": "airbnb", "display_name": "Airbnb", "enabled": true},
     {"type": "greenhouse", "company": "stripe", "display_name": "Stripe", "enabled": true},

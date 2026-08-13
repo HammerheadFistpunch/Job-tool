@@ -22,7 +22,8 @@ def collect() -> tuple[int, int]:
             for report in reports:
                 if report["status"] == "success":
                     report["expired"] = store.expire_missing_from_source(
-                        report["source"], report["company"], report["external_ids"]
+                        report["source"], report.get("scope") or report["company"],
+                        report["external_ids"]
                     )
                     summary.expired += report["expired"]
             store.record_source_results(run_id, reports)

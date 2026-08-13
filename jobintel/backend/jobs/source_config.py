@@ -10,6 +10,7 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SOURCE_CONFIG = PROJECT_ROOT / "config" / "job_sources.json"
 SUPPORTED_TYPES = {"greenhouse", "lever"}
+SUPPORTED_DISCOVERY_TYPES = {"jobicy"}
 
 
 def load_source_config(path: str | Path = DEFAULT_SOURCE_CONFIG) -> dict[str, Any]:
@@ -17,6 +18,7 @@ def load_source_config(path: str | Path = DEFAULT_SOURCE_CONFIG) -> dict[str, An
     data = json.loads(source_path.read_text(encoding="utf-8"))
     data.setdefault("filters", {})
     data.setdefault("sources", [])
+    data.setdefault("discovery_sources", [])
     validate_source_config(data)
     return data
 
@@ -34,6 +36,19 @@ def validate_source_config(data: dict[str, Any]) -> None:
         if key in seen:
             raise ValueError(f"Duplicate job source: {source_type}/{token}")
         seen.add(key)
+
+    query_names: set[str] = set()
+    for provider in data.get("discovery_sources", []):
+        source_type = str(provider.get("type", "")).lower()
+        if source_type not in SUPPORTED_DISCOVERY_TYPES:
+            raise ValueError(f"Unsupported discovery source type: {source_type}")
+        for query in provider.get("queries", []):
+            name = str(query.get("name") or "").strip()
+            if not name:
+                raise ValueError("Every discovery query requires a name")
+            if name.lower() in query_names:
+                raise ValueError(f"Duplicate discovery query: {name}")
+            query_names.add(name.lower())
 
 
 def set_source_enabled(

@@ -51,6 +51,9 @@ class JobIngestionPipeline:
             "source_url": job.get("source_url", job.get("canonical_url", "")),
             "posted_at": job.get("posted_at", ""),
             "updated_at": job.get("updated_at", ""),
+            "discovery_scope": job.get("discovery_scope", ""),
+            "query_name": job.get("query_name", ""),
+            "location_scope": job.get("location_scope", ""),
             "raw": job.get("raw", job),
         }
 

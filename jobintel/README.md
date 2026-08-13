@@ -21,6 +21,9 @@ The reliable collection foundation is complete:
 - Every collection run records counts, status, and source errors.
 - The legacy database is upgraded in place without deleting existing rows.
 - Collection can run independently of sentence-transformers and Ollama.
+- Query-driven Jobicy discovery searches across employers without an API key.
+- Cross-provider attribution and deduplication preserve one stable review record.
+- Per-query remote-US and Utah-area health/count reporting is stored locally.
 
 The structured profile and first deterministic eligibility layer are now in
 place. Hard rejections run before semantic ranking and cannot be overridden by
@@ -58,6 +61,10 @@ pip install -r requirements.txt
 Edit `config/job_sources.json` to add ATS board tokens. Supported source types
 are `greenhouse` and `lever`. A source can be retained but skipped by setting
 `"enabled": false`.
+
+The same file contains `discovery_sources`. Jobicy queries are enabled by
+default for the target role families. Jobicy is remote-focused; the Utah query
+is intentionally reported even when it returns zero local matches.
 
 The default registry now includes 20 companies rather than the original three.
 Fourteen boards were live-verified on August 12, 2026; six retained candidate
@@ -130,6 +137,17 @@ database integrity, profile state, configuration, Ollama reachability, and
 installed Ollama models. An unavailable Ollama service is reported without
 preventing collection, eligibility, or review work.
 
+Validate the broad-discovery baseline after collection:
+
+```powershell
+python -m backend.discovery_report
+```
+
+This checks employer count and concentration, reviewable volume, query status,
+and explicit remote-US/Utah reporting. The review queue limits only excess
+unreviewed reviewable jobs from one employer (10 by default in
+`config/settings.json`); it never deletes jobs or hides already-reviewed work.
+
 ## Windows launchers
 
 - `Install-JobIntel.cmd` creates `.venv`, installs dependencies, and runs
@@ -159,13 +177,13 @@ setup script after source selection and expiration behavior are finalized.
 - Jobs missing from a successfully fetched board are marked inactive. A failed
   board never expires its jobs.
 
-## Current collection limitation
+## Current collection status
 
-The latest target-machine run returned 77 active jobs, still dominated by
-Stripe, Airbnb, and Dropbox. The direct-board collector is functioning as
-designed, but it does not represent the broader market. Do not use that batch to
-tune matching. The next milestone is query-based discovery across employers;
-see `../READ_FIRST.md` and `BUILD_ROADMAP.md`.
+An isolated live run on August 13, 2026 passed the discovery criteria with 107
+active jobs across 35 employers and 56 visible reviewable jobs. A consecutive
+run created no duplicates and preserved review history. The next target-machine
+step is to run collection and `backend.discovery_report` against Patrick's
+persistent database, then label approximately 20–30 jobs before matching work.
 
 See [`BUILD_ROADMAP.md`](BUILD_ROADMAP.md) for the revised implementation
 sequence and [`docs/PROFILE_REVIEW.md`](docs/PROFILE_REVIEW.md) for the resolved

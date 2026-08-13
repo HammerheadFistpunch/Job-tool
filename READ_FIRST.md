@@ -8,7 +8,7 @@ full implementation sequence.
 
 - Repository: `HammerheadFistpunch/Job-tool`
 - Working branch: `GPT_Redesign`
-- Last verified functional commit: `5d183936494531dc25b46f5c7fff8aac929664a1`
+- Last verified functional commit before this handoff: `96e4a9425960f993da044b6170799e0c99145eb0`
 - Local application folder: `jobintel`
 - Candidate profile version: `2026-08-12.2`
 - Target platform: Windows 11, Python 3.12.8, local SQLite, local Ollama
@@ -23,14 +23,12 @@ Lever company boards, normalize and deduplicate them, preserve changes in
 SQLite, apply explainable eligibility rules, and display the results in a local
 review dashboard.
 
-The current collection is **not yet broad enough to use as a matching
-baseline**. A real run produced 77 active entries, still dominated by Stripe,
-Airbnb, and Dropbox, with only a few jobs from other employers. Expanding a
-static list from 3 to 20 candidate employers improved source management but did
-not create market-wide discovery.
-
-Do not ask Patrick to label the current batch. Its employer distribution is too
-biased to support meaningful tuning.
+Query-based broad discovery is implemented through Jobicy's public remote-jobs
+API alongside the direct ATS boards. A clean live validation on August 13, 2026
+produced 107 distinct active jobs across 35 employers. The diversity-capped
+review queue contained 56 eligible or needs-review jobs across 29 employers;
+the largest employer represented 17.86%. All documented discovery acceptance
+checks passed.
 
 ## What is working
 
@@ -49,15 +47,25 @@ biased to support meaningful tuning.
 - Review metrics API and a reproducible policy fixture.
 - Windows setup, launch, and diagnostic scripts.
 - Target-machine diagnostics: database, packages, and Ollama all reachable.
-- Latest functional validation: 44 tests passed; a live smoke run completed all
+- Prior direct-board validation: 44 tests passed; a live smoke run completed all
   14 enabled boards with no errors and retained 76 prefiltered postings.
+- Jobicy query discovery for technical marketing, product marketing, strategic
+  communications, content strategy, creative/video, and Utah-area monitoring.
+- Query-scoped attribution, health/count reporting, and safe expiration across
+  overlapping providers.
+- Cross-provider deduplication that preserves distinct same-provider openings.
+- Configurable review-queue diversity cap that never deletes jobs or hides
+  already-reviewed records.
+- `python -m backend.discovery_report` acceptance report.
+- Latest validation: 51 tests passed. Two consecutive live runs produced 107
+  active jobs; the second run reported 0 new, 0 updated, and 134 unchanged
+  discoveries while preserving a saved review marker.
 
 ## Known limitations
 
-- Collection is still a finite list of individual employer boards, not a broad
-  search of the available job market.
-- The current queue is heavily employer-biased and unsuitable for evaluating
-  match quality.
+- The no-key broad provider is remote-focused. Its Utah-scoped query is recorded
+  but returned zero local matches in the latest live run; a true local-market
+  provider remains desirable later.
 - The semantic embedding score remains experimental.
 - Facet-based retrieval and long-description chunking are not built.
 - Ollama reranking is not built or enabled.
@@ -66,31 +74,13 @@ biased to support meaningful tuning.
 - Six candidate employer tokens are disabled after confirmed 404 responses;
   those employers may use different ATS products or private career APIs.
 
-## Immediate next build milestone
+## Immediate next milestone
 
-Build query-based broad discovery while retaining individual ATS boards as
-high-quality supplemental sources.
-
-Required scope:
-
-1. Add at least one broad, query-driven source that searches across employers.
-2. Support configurable role queries for technical marketing, product
-   marketing, strategic communications, content strategy, creative/video, and
-   credible adjacent manager/director or senior-IC roles.
-3. Support remote-US and Sandy/Salt Lake-area location queries.
-4. Normalize broad-source records into the existing ingestion pipeline.
-5. Deduplicate overlapping discoveries, including the same posting found through
-   a broad source and a direct ATS board.
-6. Preserve canonical job links and explicit source attribution.
-7. Record per-query counts, failures, rate limits, and last successful run.
-8. Make API-key-dependent providers optional; missing credentials must not stop
-   direct ATS collection.
-9. Add tests and a live collection report that demonstrates meaningful employer
-   diversity before requesting user labels.
-
-Acceptance criteria are defined in `jobintel/BUILD_ROADMAP.md`. Do not proceed
-to matching-weight tuning or Ollama benchmarking until the discovery baseline
-passes those criteria.
+Run the new discovery build on Patrick's Windows database, confirm the generated
+acceptance report, then have Patrick label approximately 20–30 jobs from the
+diverse queue. Use those labels to establish precision at 10, hard-reject
+leakage, coverage, and reason-frequency baselines before changing semantic
+weights or beginning Ollama benchmarking.
 
 ## Restart procedure
 
@@ -103,6 +93,8 @@ git pull --ff-only origin GPT_Redesign
 cd jobintel
 .venv\Scripts\python.exe -m backend.diagnostics
 .venv\Scripts\python.exe -m unittest discover -s tests -v
+.venv\Scripts\python.exe -m backend.collect_jobs
+.venv\Scripts\python.exe -m backend.discovery_report
 ```
 
 Before implementation, inspect:
@@ -129,6 +121,6 @@ Before implementation, inspect:
 
 ## Next user checkpoint
 
-Patrick's next hands-on task should occur only after broad discovery produces a
-diverse queue. At that point, ask him to review approximately 20–30 jobs so the
-first real precision and rejection-leakage baseline can be measured.
+Patrick can now run collection and the discovery report on the target machine.
+If the report passes against his persistent database, review approximately
+20–30 jobs in the dashboard. Do not tune ranking until those labels exist.

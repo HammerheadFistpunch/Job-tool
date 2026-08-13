@@ -1,6 +1,7 @@
 {
   "dashboard": {"host": "127.0.0.1", "port": 8000},
   "collection": {"schedule": "daily", "local_time": "08:00"},
+  "review_queue": {"max_new_reviewable_per_employer": 10},
   "embedding": {"model": "all-MiniLM-L6-v2"},
   "ollama": {"enabled": false, "url": "http://127.0.0.1:11434", "model": "", "context_size": 16384},
   "evaluation": {"precision_cutoff": 10}

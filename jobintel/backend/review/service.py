@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from backend.eligibility import EligibilityEvaluator
+from backend.config import load_settings
 from backend.profile.loader import load_structured_profile
 from backend.storage.job_store import JobStore
 
@@ -51,7 +52,21 @@ class ReviewQueueService:
     def list_jobs(self) -> list[dict[str, Any]]:
         self.refresh()
         with JobStore(self.database) as store:
-            return store.list_review_queue(self.profile.profile_version)
+            jobs = store.list_review_queue(self.profile.profile_version)
+        cap = int(load_settings().get("review_queue", {}).get("max_new_reviewable_per_employer", 0))
+        if cap <= 0:
+            return jobs
+        counts: dict[str, int] = {}
+        visible = []
+        for job in jobs:
+            if job["review_state"] != "new" or job["eligibility_status"] == "ineligible":
+                visible.append(job)
+                continue
+            company = str(job.get("company") or "Unknown").strip().lower()
+            counts[company] = counts.get(company, 0) + 1
+            if counts[company] <= cap:
+                visible.append(job)
+        return visible
 
     def save_review(
         self,
