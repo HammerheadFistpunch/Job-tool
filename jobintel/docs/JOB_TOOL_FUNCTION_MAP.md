@@ -71,6 +71,8 @@ agent must use the same schema and approval path.
 | Narrative profile | `data/input/Profiles/pr_profile.md` | Human narrative/legacy embedding input | Non-authoritative |
 | Review | `backend/review/`, `main.py` | Queue, labels, states, feedback, metrics | Working |
 | Discovery report | `backend/discovery_report.py` | Employer diversity and query health | Working |
+| Benchmark importer | `backend/benchmark/`, `backend/import_benchmark.py` | Preserve scheduled-scout candidates, rationale, and provenance | Working |
+| Benchmark report | `backend/benchmark_report.py` | Confirmed-positive review and independent-discovery recall | Working; awaiting actual runs |
 | Legacy embeddings | `backend/ai/` | MiniLM similarity and keyword scoring | Experimental; not trusted |
 | Fit specification | planned `backend/fit_spec/` | Draft, validate, diff, approve, activate | Sprint 1 |
 | Evidence library | profile/storage changes | Stable claim IDs and provenance | Sprint 1 |
@@ -94,6 +96,7 @@ agent must use the same schema and approval path.
 | `collection_runs` and source results | Run health, counts, failures, and rate-limit metadata |
 | `job_eligibility_evaluations` | Profile-versioned hard-rule results and evidence |
 | `job_reviews` | Workflow state, label, reasons, notes, and feedback |
+| `benchmark_candidates` | Scheduled task/run provenance, selection rationale, fit signals, and concerns |
 
 ### Planned logical records
 
@@ -158,6 +161,7 @@ remain optional.
 
 ## Current next step
 
-Complete the real-job baseline while implementing Sprint 1's evidence IDs and
-Job Fit Specification. See `DEVELOPMENT_SPRINTS.md` for tickets, dependencies,
-and acceptance criteria.
+Import actual scheduled-task runs and have Patrick confirm or reject the
+benchmark candidates. Then implement the discovery-parity report while Sprint 1
+adds evidence IDs and the Job Fit Specification. See `DEVELOPMENT_SPRINTS.md`
+for tickets, dependencies, and acceptance criteria.

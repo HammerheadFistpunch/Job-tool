@@ -16,30 +16,85 @@ Every sprint must:
 - update the README, function map, and diagnostics when behavior changes;
 - pass the full unit suite on a clean local database and an upgraded fixture.
 
-## Sprint 0 — Real-job baseline
+## Sprint 0A — Scheduled-task benchmark
 
-**Goal:** create trustworthy evaluation data before changing ranking.
+**Goal:** use the better-aligned scheduled high-fit search as the initial source
+of positive benchmark candidates instead of treating the noisy broad queue as a
+representative matching baseline.
 
-### Work
+### Implemented foundation
 
-- Run collection and `backend.discovery_report` on Patrick's persistent database.
-- Label approximately 20–30 diverse eligible/needs-review jobs.
+- Added a validated, idempotent JSON import command:
+  `python -m backend.import_benchmark <file>`.
+- Added migration-safe benchmark storage with task/run provenance, reported time,
+  selection rationale, fit signals, concerns, and raw input.
+- Scheduled results merge with an existing source posting without replacing the
+  employer's complete description or review identity.
+- Imported results remain unconfirmed (`new`, no match label) until Patrick
+  reviews them.
+- The dashboard identifies and filters benchmark candidates and displays the
+  scheduled task's rationale.
+- Benchmark candidates bypass the standard per-employer queue cap but remain
+  subject to deterministic eligibility.
+
+### Remaining work
+
+- Import actual runs from the `High-fit leadership jobs` scheduled task.
+- Have Patrick confirm or reject candidates with labels and reason codes.
 - Add a command to export a de-identified, versioned evaluation snapshot.
-- Record coverage, precision at 10, hard-reject leakage, label distribution, and
-  reason frequency.
-- Freeze the snapshot as the first real-job regression baseline.
+- Record coverage, confirmed-positive rate, label distribution, hard-reject
+  leakage, and reason frequency.
+- Freeze confirmed candidates plus useful broad-queue negatives as the first
+  regression baseline.
 
 ### Acceptance
 
-- Discovery report passes or its failures are explicitly recorded.
-- At least 20 jobs have labels and reason codes; the target is 30.
-- Re-running export produces stable IDs and does not alter review data.
+- Imported results preserve direct employer links and task/run provenance.
+- Re-importing one run creates no duplicate job or benchmark record.
+- No scheduled-task recommendation becomes a positive label automatically.
+- The baseline contains enough confirmed positives and useful negatives to
+  distinguish retrieval quality; 20–30 reviewed examples remains the target,
+  but they do not need to come from a random broad-queue slice.
 - Baseline metrics can be reproduced from the exported snapshot.
 
 ### Dependency
 
-None. Patrick's labeling is required for completion. Sprint 1 can proceed while
-labels are being gathered.
+None. Patrick's confirmation is required for completion. Sprint 1 can proceed
+while scheduled-task candidates accumulate.
+
+## Sprint 0B — Discovery parity
+
+**Goal:** make JobIntel's independent hunting process find the genuinely suitable
+jobs already found by the scheduled task.
+
+### Implemented foundation
+
+- Added `python -m backend.benchmark_report`.
+- The report distinguishes pending, confirmed positive, and reviewed
+  non-positive candidates.
+- Confirmed-positive recall uses only `strong_match` and `consider` labels and
+  reports independent sources, discovery timing, and missed confirmed jobs.
+
+### Work
+
+- Validate parity on actual imported runs and freeze the first report.
+- Search by responsibilities and role families rather than relying only on exact
+  title keywords.
+- Add broader public-web/employer-career-page discovery through a source contract
+  that preserves direct links and source health.
+- Track unique relevant yield by source and avoid re-reporting reviewed jobs.
+
+### Acceptance
+
+- Discovery parity is reproducible from stored benchmark and discovery records.
+- Missed benchmark jobs are visible with a reason when determinable.
+- A new source is retained only when it contributes measurable unique relevant
+  jobs without weakening failure isolation.
+- Collection volume is never reported as matching quality.
+
+### Dependency
+
+Enough confirmed Sprint 0A candidates to measure meaningful recall.
 
 ## Sprint 1 — Candidate Intelligence Foundation
 
@@ -121,12 +176,12 @@ shortlist that does not require an LLM for every job.
 - Changed job text invalidates only affected derived analysis.
 - Cached extraction avoids duplicate model calls for unchanged content.
 - Hard-ineligible jobs never enter the shortlist.
-- Shortlist recall is measured against the Sprint 0 labels before thresholds are
+- Shortlist recall is measured against the Sprint 0 benchmark before thresholds are
   accepted.
 
 ### Dependency
 
-Sprints 0–2.
+Sprints 0A–2. Sprint 0B informs source recall but does not block job-text work.
 
 ## Sprint 4 — Evidence-grounded Fit Analysis and Model Benchmark
 
@@ -232,7 +287,7 @@ without adding brittle or low-value sources.
 
 ### Dependency
 
-May begin after Sprint 0; prioritize after the main intelligence pipeline works.
+May begin after Sprint 0A; prioritize after the main intelligence pipeline works.
 
 ## Sprint 8 — Agent Interoperability and Release Hardening
 
@@ -262,14 +317,16 @@ Sprints 1–7.
 
 ## Recommended next-session ticket order
 
-1. `S0-01` Persistent database discovery validation.
-2. `S0-02` Review labeling and baseline export design.
-3. `S1-01` Evidence ID/provenance schema.
-4. `S1-02` Job Fit Specification JSON schema and validator.
-5. `S1-03` Migration of profile `2026-08-12.2`.
-6. `S1-04` Draft/approve/activate/diff/import/export commands.
-7. `S1-05` Regression tests proving deterministic equivalence.
+1. `S0A-02` Import the first actual scheduled-task run.
+2. `S0A-03` Confirm/reject benchmark candidates in the dashboard.
+3. `S0A-04` Baseline snapshot export and metrics.
+4. `S0B-02` Validate and freeze discovery parity on actual benchmark runs.
+5. `S1-01` Evidence ID/provenance schema.
+6. `S1-02` Job Fit Specification JSON schema and validator.
+7. `S1-03` Migration of profile `2026-08-12.2`.
+8. `S1-04` Draft/approve/activate/diff/import/export commands.
+9. `S1-05` Regression tests proving deterministic equivalence.
 
-Do not start model selection with `S2` until Sprint 0 data and Sprint 1 contracts
-exist. The model is an implementation choice; the schemas and evidence rules are
-the durable product.
+Do not start model selection with `S2` until Sprint 0A data and Sprint 1
+contracts exist. The model is an implementation choice; the schemas and evidence
+rules are the durable product.

@@ -388,6 +388,65 @@ class JobStore:
         ).fetchall()
         return [dict(row) for row in rows]
 
+    def job_id_for_discovery(self, source: str, external_id: str, scope: str) -> int:
+        row = self.connection.execute(
+            """
+            SELECT job_id FROM job_discoveries
+            WHERE source = ? AND external_id = ? AND scope = ?
+            """,
+            (source.lower(), external_id, scope.lower()),
+        ).fetchone()
+        if row is None:
+            raise KeyError(
+                f"Discovery not found: source={source}, external_id={external_id}, scope={scope}"
+            )
+        return int(row["job_id"])
+
+    def save_benchmark_candidate(
+        self,
+        job_id: int,
+        *,
+        task_id: str,
+        task_name: str,
+        task_run_id: str,
+        reported_at: str,
+        selection_rationale: str,
+        fit_signals: list[str] | None = None,
+        concerns: list[str] | None = None,
+        raw: dict[str, Any] | None = None,
+    ) -> None:
+        """Preserve one scout recommendation without treating it as user approval."""
+
+        if not self.connection.execute(
+            "SELECT 1 FROM jobs WHERE id = ?", (job_id,)
+        ).fetchone():
+            raise KeyError(f"Job not found: {job_id}")
+        self.connection.execute(
+            """
+            INSERT INTO benchmark_candidates(
+                job_id, task_id, task_name, task_run_id, reported_at,
+                selection_rationale, fit_signals_json, concerns_json,
+                raw_json, imported_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(task_id, task_run_id, job_id) DO UPDATE SET
+                task_name = excluded.task_name,
+                reported_at = excluded.reported_at,
+                selection_rationale = excluded.selection_rationale,
+                fit_signals_json = excluded.fit_signals_json,
+                concerns_json = excluded.concerns_json,
+                raw_json = excluded.raw_json,
+                imported_at = excluded.imported_at
+            """,
+            (
+                job_id, task_id.strip(), task_name.strip(), task_run_id.strip(),
+                reported_at.strip(), selection_rationale.strip(),
+                json.dumps(fit_signals or [], ensure_ascii=False),
+                json.dumps(concerns or [], ensure_ascii=False),
+                json.dumps(raw or {}, ensure_ascii=False, default=str), utc_now(),
+            ),
+        )
+        self.connection.commit()
+
     def save_eligibility_evaluation(
         self, job_id: int, profile_version: str, decision: Any
     ) -> None:
@@ -501,11 +560,24 @@ class JobStore:
                    e.reasons_json AS eligibility_reasons_json, e.evaluated_at,
                    COALESCE(r.review_state, 'new') AS review_state,
                    r.match_label, COALESCE(r.reason_codes_json, '[]') AS reason_codes_json,
-                   COALESCE(r.notes, '') AS notes, r.updated_at AS reviewed_at
+                   COALESCE(r.notes, '') AS notes, r.updated_at AS reviewed_at,
+                   b.task_id AS benchmark_task_id,
+                   b.task_name AS benchmark_task_name,
+                   b.task_run_id AS benchmark_run_id,
+                   b.reported_at AS benchmark_reported_at,
+                   b.selection_rationale AS benchmark_rationale,
+                   COALESCE(b.fit_signals_json, '[]') AS benchmark_fit_signals_json,
+                   COALESCE(b.concerns_json, '[]') AS benchmark_concerns_json
             FROM jobs j
             JOIN job_eligibility_evaluations e
               ON e.job_id = j.id AND e.profile_version = ?
             LEFT JOIN job_reviews r ON r.job_id = j.id
+            LEFT JOIN benchmark_candidates b ON b.id = (
+                SELECT b2.id FROM benchmark_candidates b2
+                WHERE b2.job_id = j.id
+                ORDER BY b2.reported_at DESC, b2.id DESC
+                LIMIT 1
+            )
             WHERE j.active = 1
             ORDER BY
               CASE COALESCE(r.review_state, 'new') WHEN 'new' THEN 0 WHEN 'saved' THEN 1 ELSE 2 END,
@@ -519,5 +591,12 @@ class JobStore:
             result = dict(row)
             result["eligibility_reasons"] = json.loads(result.pop("eligibility_reasons_json"))
             result["reason_codes"] = json.loads(result.pop("reason_codes_json"))
+            result["benchmark_fit_signals"] = json.loads(
+                result.pop("benchmark_fit_signals_json")
+            )
+            result["benchmark_concerns"] = json.loads(
+                result.pop("benchmark_concerns_json")
+            )
+            result["benchmark_candidate"] = bool(result.get("benchmark_task_id"))
             results.append(result)
         return results

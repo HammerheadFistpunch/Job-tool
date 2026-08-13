@@ -59,7 +59,11 @@ branch as authoritative. Do not assume the baseline SHA is still current.
 - Local FastAPI review queue with states, labels, reasons, notes, and evidence.
 - Review metrics, policy fixture, diagnostics, and Windows launchers.
 - A diversity-capped queue that does not delete jobs or hide reviewed records.
-- Latest isolated validation: 51 passing tests; 107 active jobs across 35
+- A scheduled-task benchmark importer that preserves selection rationale, fit
+  signals, concerns, task/run provenance, and unconfirmed review state.
+- A benchmark report that measures confirmed-positive independent discovery
+  recall, source overlap, discovery timing, and missed jobs.
+- Latest validation: 57 passing tests; prior live discovery produced 107 active jobs across 35
   employers; 56 visible reviewable jobs across 29 employers; largest employer
   share 17.86%; a second run created no duplicates and preserved review state.
 
@@ -80,17 +84,23 @@ branch as authoritative. Do not assume the baseline SHA is still current.
 
 ## Immediate next milestone
 
-Establish the evaluation baseline before tuning matching:
+Do not treat the broad Jobicy queue as the positive matching baseline. It proved
+collection diversity, but its surfaced jobs are materially less aligned than the
+jobs found by the existing scheduled high-fit search.
 
-1. Run collection and the discovery report against Patrick's persistent Windows
-   database.
-2. Label approximately 20–30 jobs from the diverse queue.
-3. Record precision at 10, hard-reject leakage, coverage, and reason frequency.
-4. Freeze those labels as the initial real-job regression dataset.
+The revised baseline has two parts:
 
-In parallel with user labeling, Sprint 1 may begin on evidence IDs, the Job Fit
-Specification schema, and migration-safe storage because those changes do not
-depend on score tuning.
+1. Import scheduled-task results as **unconfirmed benchmark candidates**, keeping
+   the task's selection rationale and provenance.
+2. Have Patrick confirm or reject those candidates in the dashboard.
+3. Retain broad-queue jobs primarily as negative examples and hard-filter tests.
+4. Measure discovery parity: how many confirmed scheduled-task candidates can
+   JobIntel independently find through its own sources.
+5. Freeze the confirmed positives and useful negatives as the first regression
+   dataset before tuning retrieval or selecting an Ollama model.
+
+Sprint 1 may proceed on evidence IDs and the Job Fit Specification while enough
+scheduled-task candidates accumulate for a meaningful benchmark.
 
 ## Restart procedure
 
@@ -107,6 +117,16 @@ cd jobintel
 .venv\Scripts\python.exe -m backend.discovery_report
 ```
 
+Import one scheduled-task result file with:
+
+```powershell
+.venv\Scripts\python.exe -m backend.import_benchmark path\to\benchmark.json
+.venv\Scripts\python.exe -m backend.benchmark_report
+```
+
+The input contract and example are in
+`jobintel/docs/SCHEDULED_BENCHMARK_IMPORT.md`.
+
 Then inspect:
 
 - `jobintel/BUILD_ROADMAP.md`
@@ -118,6 +138,7 @@ Then inspect:
 
 ## Next user checkpoint
 
-Patrick's next hands-on task is to label 20–30 diverse jobs. The next coding
-sprint is Sprint 1, Candidate Intelligence Foundation. Do not tune ranking or
-choose a local model based on intuition before the labeled baseline exists.
+Patrick's next hands-on task is to confirm or reject imported scheduled-task
+benchmark candidates, not to label a random slice of the broad queue. The next
+coding sprint remains Sprint 1, Candidate Intelligence Foundation. Do not tune
+ranking or choose a local model before the benchmark exists.

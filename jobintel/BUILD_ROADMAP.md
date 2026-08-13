@@ -15,6 +15,7 @@ capability behind stable contracts, not the owner of the workflow.
 | Layer | Responsibility | AI required? | Current state |
 |---|---|---:|---|
 | Core | Collection, normalization, deduplication, persistence, hard rules, review state, export | No | Working |
+| Benchmark | Scheduled-scout candidates, rationale, provenance, and user confirmation | No | Import foundation working |
 | Candidate intelligence | Evidence library and approved Job Fit Specification | No after approval | Partially structured |
 | Retrieval | Job chunking, facets, deterministic shortlist | No | Not built |
 | Analysis | Requirement extraction, evidence comparison, organization-fit signals | Replaceable local/hosted model | Not built |
@@ -65,22 +66,34 @@ capability behind stable contracts, not the owner of the workflow.
 - Local FastAPI queue with workflow states, labels, reasons, notes, and links.
 - Coverage, precision-at-10, hard-reject leakage, and reason metrics.
 - Reproducible policy fixture, diagnostics, settings, and Windows launchers.
-- Latest validation: 51 tests and all broad-discovery acceptance checks passed.
+- Latest validation: 57 tests and all broad-discovery acceptance checks passed.
+- Scheduled-task benchmark import with idempotent job merging, task/run
+  provenance, preserved rationale/signals/concerns, dashboard filtering, and no
+  automatic positive label.
+- Discovery-parity reporting for confirmed positives, independent sources,
+  discovery lag, recall, and missed jobs.
 
 ## Delivery sequence
 
 ### Phase A — Trustworthy candidate intelligence
 
-1. Capture 20–30 real-job labels and freeze the initial evaluation baseline.
-2. Assign stable IDs and provenance to career achievements, skills, education,
+1. Import the scheduled high-fit search results as unconfirmed benchmark
+   candidates and have Patrick confirm or reject them.
+2. Use the broad discovery queue primarily for negative examples until its
+   alignment improves.
+3. Measure discovery parity against confirmed scheduled-task candidates; do not
+   confuse collection volume with relevant-job recall.
+4. Freeze confirmed positives and useful negatives as the initial evaluation
+   baseline.
+5. Assign stable IDs and provenance to career achievements, skills, education,
    preferences, and personality/organization-fit statements.
-3. Introduce a versioned Job Fit Specification separating:
+6. Introduce a versioned Job Fit Specification separating:
    - hard eligibility rules;
    - preferred role families and seniority;
    - weighted ranking preferences;
    - organization/personality-fit signals;
    - negative signals and uncertainty policy.
-4. Add generate, validate, diff, approve, activate, import, and export operations.
+7. Add generate, validate, diff, approve, activate, import, and export operations.
    A model may propose a specification, but only an approved version is active.
 
 ### Phase B — Provider-neutral local intelligence
@@ -129,6 +142,7 @@ capability behind stable contracts, not the owner of the workflow.
 | Gate | Required evidence |
 |---|---|
 | Candidate contract ready | Approved fit spec is versioned, diffable, exportable, and produces the same hard-rule results after reload |
+| Benchmark ready | Confirmed scheduled-task candidates and useful negatives are preserved; discovery parity is reproducible |
 | Local AI ready | Ollama and deterministic adapters pass identical schema-contract tests; collection still passes with Ollama stopped |
 | Matching ready | Fixed labeled set meets agreed precision/leakage targets and every positive claim cites valid evidence IDs |
 | Application studio ready | A selected job produces a complete editable package with zero unsupported candidate claims in the test set |
@@ -144,6 +158,8 @@ capability behind stable contracts, not the owner of the workflow.
 
 ## Current next build chunk
 
-Use `docs/DEVELOPMENT_SPRINTS.md` as the executable backlog. Begin Sprint 0 on
-Patrick's Windows database and Sprint 1 in code. Sprint 2 must not select or tune
-an Ollama model until the real-job baseline and contract tests exist.
+Use `docs/DEVELOPMENT_SPRINTS.md` as the executable backlog. Sprint 0A's import
+foundation is implemented; next import actual scheduled-task runs and gather
+Patrick's confirmations. Begin Sprint 0B discovery-parity measurement and Sprint
+1 in code. Sprint 2 must not select or tune an Ollama model until the benchmark
+and contract tests exist.

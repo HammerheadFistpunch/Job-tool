@@ -30,6 +30,8 @@ The reliable collection foundation is complete:
 - Query-driven Jobicy discovery searches across employers without an API key.
 - Cross-provider attribution and deduplication preserve one stable review record.
 - Per-query remote-US and Utah-area health/count reporting is stored locally.
+- Scheduled high-fit results can be imported as unconfirmed benchmark candidates
+  with rationale and task/run provenance.
 
 The structured profile and first deterministic eligibility layer are now in
 place. Hard rejections run before semantic ranking and cannot be overridden by
@@ -57,6 +59,8 @@ input; it is not the source of hard search policy.
   sequence.
 - [`docs/DEVELOPMENT_SPRINTS.md`](docs/DEVELOPMENT_SPRINTS.md): executable sprint
   backlog, dependencies, acceptance criteria, and next tickets.
+- [`docs/SCHEDULED_BENCHMARK_IMPORT.md`](docs/SCHEDULED_BENCHMARK_IMPORT.md):
+  scheduled-task benchmark JSON contract and review workflow.
 
 ## Design guarantees
 
@@ -168,6 +172,23 @@ and explicit remote-US/Utah reporting. The review queue limits only excess
 unreviewed reviewable jobs from one employer (10 by default in
 `config/settings.json`); it never deletes jobs or hides already-reviewed work.
 
+Import a result set from the scheduled high-fit scout:
+
+```powershell
+python -m backend.import_benchmark C:\path\to\benchmark.json
+```
+
+Imported jobs are benchmark candidates, not automatic positive labels. The
+dashboard can filter them separately and shows the scheduled task's rationale,
+fit signals, and concerns. See `docs/SCHEDULED_BENCHMARK_IMPORT.md` for the JSON
+contract.
+
+After confirming or rejecting candidates, measure JobIntel's independent recall:
+
+```powershell
+python -m backend.benchmark_report
+```
+
 ## Windows launchers
 
 - `Install-JobIntel.cmd` creates `.venv`, installs dependencies, and runs
@@ -201,14 +222,19 @@ setup script after source selection and expiration behavior are finalized.
 
 An isolated live run on August 13, 2026 passed the discovery criteria with 107
 active jobs across 35 employers and 56 visible reviewable jobs. A consecutive
-run created no duplicates and preserved review history. The next target-machine
-step is to run collection and `backend.discovery_report` against Patrick's
-persistent database, then label approximately 20–30 jobs before matching work.
+run created no duplicates and preserved review history. That proves collection
+diversity, not match quality: the broad queue was materially less aligned than
+the scheduled high-fit search. Do not label a random slice as the positive
+baseline. Import and confirm scheduled-task candidates, use useful broad-queue
+jobs as negatives, and measure JobIntel's discovery parity against the confirmed
+benchmark.
 
-The next coding work is Sprint 1: add stable career-evidence IDs and a versioned,
-user-approved Job Fit Specification. The provider gateway and Ollama adapter
-follow in Sprint 2; job understanding and fit analysis follow only after the
-baseline and durable schemas exist.
+The scheduled benchmark import foundation is complete. The next operational step
+is importing actual scheduled-task runs and confirming or rejecting those jobs.
+The next coding work is the discovery-parity report plus Sprint 1's stable career
+evidence IDs and versioned, user-approved Job Fit Specification. The provider
+gateway and Ollama adapter follow only after the benchmark and durable schemas
+exist.
 
 See [`BUILD_ROADMAP.md`](BUILD_ROADMAP.md) for the revised implementation
 sequence and [`docs/PROFILE_REVIEW.md`](docs/PROFILE_REVIEW.md) for the resolved

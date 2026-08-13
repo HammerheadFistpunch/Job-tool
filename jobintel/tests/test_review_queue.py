@@ -120,6 +120,35 @@ class ReviewQueueTests(unittest.TestCase):
         visible_ids = {job["database_id"] for job in self.service.list_jobs()}
         self.assertIn(hidden_id, visible_ids)
 
+    def test_benchmark_candidate_bypasses_employer_diversity_cap(self):
+        with JobStore(self.database) as store:
+            store.upsert_jobs([{
+                "external_id": f"benchmark-cap-{index}",
+                "source": "test",
+                "company": "Builder Company",
+                "title": f"Technical Marketing Director {index}",
+                "location": "Remote - US",
+                "description": "Base salary: $100,000-$125,000.",
+                "canonical_url": f"https://example.test/benchmark-cap-{index}",
+            } for index in range(12)])
+            target = next(
+                job for job in store.list_active_jobs()
+                if job["id"] == "benchmark-cap-11"
+            )
+            store.save_benchmark_candidate(
+                target["database_id"],
+                task_id="scheduled-high-fit",
+                task_name="High-fit leadership jobs",
+                task_run_id="2026-08-13T08:00:00-06:00",
+                reported_at="2026-08-13T08:05:00-06:00",
+                selection_rationale="High-fit scout candidate.",
+            )
+
+        visible = self.service.list_jobs()
+        self.assertIn(
+            target["database_id"], {job["database_id"] for job in visible}
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

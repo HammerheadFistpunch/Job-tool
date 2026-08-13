@@ -155,6 +155,21 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             active INTEGER NOT NULL DEFAULT 1,
             UNIQUE(source, external_id, scope)
         );
+
+        CREATE TABLE IF NOT EXISTS benchmark_candidates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+            task_id TEXT NOT NULL,
+            task_name TEXT NOT NULL DEFAULT '',
+            task_run_id TEXT NOT NULL,
+            reported_at TEXT NOT NULL,
+            selection_rationale TEXT NOT NULL,
+            fit_signals_json TEXT NOT NULL DEFAULT '[]',
+            concerns_json TEXT NOT NULL DEFAULT '[]',
+            raw_json TEXT NOT NULL DEFAULT '{}',
+            imported_at TEXT NOT NULL,
+            UNIQUE(task_id, task_run_id, job_id)
+        );
         """
     )
 
@@ -204,6 +219,10 @@ def initialize_database(connection: sqlite3.Connection) -> None:
             ON job_discoveries(job_id, active);
         CREATE INDEX IF NOT EXISTS ix_job_discoveries_scope
             ON job_discoveries(source, scope, active);
+        CREATE INDEX IF NOT EXISTS ix_benchmark_candidates_job
+            ON benchmark_candidates(job_id, reported_at DESC, id DESC);
+        CREATE INDEX IF NOT EXISTS ix_benchmark_candidates_task_run
+            ON benchmark_candidates(task_id, task_run_id);
         """
     )
     connection.commit()

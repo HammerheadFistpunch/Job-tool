@@ -59,7 +59,11 @@ class ReviewQueueService:
         counts: dict[str, int] = {}
         visible = []
         for job in jobs:
-            if job["review_state"] != "new" or job["eligibility_status"] == "ineligible":
+            if (
+                job["review_state"] != "new"
+                or job["eligibility_status"] == "ineligible"
+                or job.get("benchmark_candidate")
+            ):
                 visible.append(job)
                 continue
             company = str(job.get("company") or "Unknown").strip().lower()
