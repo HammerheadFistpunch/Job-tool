@@ -1,192 +1,163 @@
-# Job-tool Function Map and Components
+# JobIntel Function Map and Architecture
 
-**Repository:** `HammerheadFistpunch/Job-tool`  
-**Working branch:** `GPT_Redesign`  
-**Reference state:** Broad discovery, direct ATS collection, deterministic
-eligibility, and the diverse review queue are working; real-job labeling is next.
+**Repository:** `HammerheadFistpunch/Job-tool`
 
-## System overview
+**Integration branch:** `GPT_Redesign`
+
+**Reference state:** Discovery, persistence, deterministic eligibility, and the
+review queue work. Candidate intelligence, model analysis, application packages,
+and installed automation are the next product layers.
+
+## Target system boundary
+
+JobIntel owns data and workflow state. Agents and models call stable operations;
+they do not become the system of record.
 
 ```mermaid
 flowchart TD
-    A["Direct ATS + Jobicy queries"] --> B["Fetch jobs"]
-    B --> C["Normalize records"]
-    C --> D["SQLite storage"]
-    D --> E["Deduplicate and update"]
-    E --> F["Active job collection"]
-
-    G["Candidate profile"] --> H["Profile embedding"]
-    F --> I["Job embeddings"]
-    H --> J["Experimental ranking"]
-    I --> J
-    J --> K["Top 10 console results"]
+    A["Job sources"] --> B["Local core"]
+    C["Candidate evidence"] --> B
+    B --> D["Provider-neutral AI tasks"]
+    D --> E["Validated analysis"]
+    E --> F["Review and application studio"]
+    F --> B
 ```
 
-## Two main workflows
+The **local core** includes collection, normalization, SQLite, deterministic
+eligibility, approved fit-spec state, review state, scheduling, and exports. It
+must work when the AI task layer is disabled or unavailable.
 
-### 1. Collection workflow
+## End-to-end workflow
 
-Command:
-
-```powershell
-python -m backend.collect_jobs
+```mermaid
+flowchart TD
+    A["Collect and normalize"] --> B["Deterministic eligibility"]
+    B --> C["Facet shortlist"]
+    C --> D["Structured fit analysis"]
+    D --> E["Ranked review queue"]
+    E --> F["Approved job"]
+    F --> G["Evidence plan"]
+    G --> H["Application package"]
+    E --> I["User feedback"]
+    I --> J["Evaluation baseline"]
 ```
 
-Function:
+## Candidate information flow
 
-1. Reads enabled employers from `config/job_sources.json`.
-2. Downloads jobs from Greenhouse or Lever.
-3. Converts different source formats into one standard job format.
-4. Stores jobs in SQLite.
-5. Detects new, changed, and unchanged postings.
-6. Records collection statistics and errors.
-
-This is the reliable, completed portion of the application.
-
-### 2. Recommendation workflow
-
-Command:
-
-```powershell
-python -m backend.run_recommendations
+```mermaid
+flowchart TD
+    A["Work history and achievements"] --> D["Evidence library"]
+    B["Requirements and preferences"] --> E["Draft Job Fit Specification"]
+    C["Personality and organization fit"] --> E
+    D --> E
+    E --> F{"Patrick approves?"}
+    F -->|"Yes"| G["Active version"]
+    F -->|"No"| H["Revise draft"]
 ```
 
-Function:
+Only an approved Job Fit Specification may affect eligibility or ranking. Model
+generation is one way to propose a draft; import, manual editing, and another
+agent must use the same schema and approval path.
 
-1. Loads the Markdown candidate profile.
-2. Collects and stores current jobs.
-3. Creates profile and job embeddings.
-4. Extracts a small set of recognized skills.
-5. Calculates an experimental match score.
-6. Prints the ten highest-scoring jobs.
+## Current and planned components
 
-This portion works technically, but the matching is not yet trustworthy enough for actual job-search decisions.
-
-## Current components
-
-| Component | Location | Function | Status |
+| Area | Component/location | Responsibility | Status |
 |---|---|---|---|
-| Source configuration | `config/job_sources.json` | Lists employers and ATS types | Working |
-| Job aggregator | `backend/jobs/job_aggregator.py` | Runs all enabled job sources | Working |
-| Greenhouse fetcher | `backend/jobs/fetchers/greenhouse_fetcher.py` | Downloads complete Greenhouse postings | Working |
-| Lever fetcher | `backend/jobs/fetchers/lever_fetcher.py` | Downloads complete Lever postings | Working |
-| Jobicy fetcher | `backend/jobs/fetchers/jobicy_fetcher.py` | Runs no-key remote-US and Utah-scoped role queries | Working |
-| Ingestion pipeline | `backend/jobs/job_ingestion.py` | Gives every job the same fields | Working |
-| Job store | `backend/storage/job_store.py` | Saves, updates, and deduplicates jobs | Working |
-| Database manager | `backend/storage/database.py` | Creates and upgrades the SQLite database | Working |
-| Collection command | `backend/collect_jobs.py` | Runs collection without loading AI | Working |
-| Candidate profile | `data/input/Profiles/pr_profile.md` | Current source of candidate information | Working, but unstructured |
-| Profile loader | `backend/profile/loader.py` | Reads the Markdown profile | Working |
-| Candidate schema | `backend/profile/schema.py` | Validates versioned profile and search rules | Working |
-| Structured profile | `data/input/Profiles/patrick_profile.json` | Career evidence, targets, preferences, exclusions | Working; initial policy resolved |
-| Eligibility engine | `backend/eligibility/engine.py` | Applies explainable hard filters before ranking | Working |
-| Eligibility command | `backend/evaluate_jobs.py` | Reevaluates stored jobs without AI models | Working |
-| Job normalizer | `backend/jobs/job_normalizer.py` | Prepares job text for embeddings | Working |
-| Embedding service | `backend/ai/embedding_service.py` | Creates semantic vectors using MiniLM | Experimental |
-| Job embedding service | `backend/jobs/job_embedding_service.py` | Embeds title, description, and metadata | Experimental |
-| Skill extractor | `backend/ai/skill_extractor.py` | Finds recognized keywords | Too limited |
-| Ranking engine | `backend/ai/ranking_engine.py` | Combines semantic and skill scores | Experimental |
-| Recommendation command | `backend/run_recommendations.py` | Produces console recommendations | Experimental |
-| FastAPI application | `main.py` | Local review UI and JSON endpoints | Working |
-| Ollama analysis | Not built | Detailed requirement/evidence comparison | Planned |
-| Review interface | `main.py` | Review, label, save, filter, and explain jobs | Working |
-| Review metrics | `backend/review/metrics.py` | Coverage, precision, leakage, labels, reasons | Working; awaiting real labels |
-| Runtime settings | `config/settings.json` | Dashboard, schedule, embedding, Ollama settings | Working |
-| Diagnostics | `backend/diagnostics.py` | Target-machine readiness report | Working |
-| Evaluation fixture | `data/evaluation/baseline_jobs.json` | Reproducible policy regression set | Working |
-| Source registry | `config/job_sources.json` | ATS boards plus role/location prefilter | Working; 14 boards live-verified |
-| Source management | `backend/jobs/source_config.py`, `main.py` | Toggle boards and inspect health | Working |
-| Market prefilter | `backend/jobs/prefilter.py` | Reject obvious wrong-role/wrong-location records before storage | Working |
-| Posting expiration | `backend/storage/job_store.py` | Deactivate missing jobs after a successful source fetch | Working |
-| Discovery attribution | `job_discoveries` table | Preserves source/query provenance and overlap lifecycle | Working |
-| Discovery report | `backend/discovery_report.py` | Validates employer diversity and query health | Working |
-| Queue diversity | `backend/review/service.py` | Caps only new reviewable jobs per employer | Working |
-| Scheduler setup | Not built | Automatically installs scheduled collection | Collection command is scheduler-ready |
+| Sources | `config/job_sources.json` | Direct boards, broad queries, prefilter | Working |
+| Collection | `backend/jobs/` | Fetch, normalize, attribute, deduplicate | Working |
+| Persistence | `backend/storage/` | SQLite schema, migrations, job lifecycle | Working |
+| Eligibility | `backend/eligibility/` | Explainable hard rules | Working |
+| Candidate profile | `data/input/Profiles/patrick_profile.json` | Authoritative structured facts/rules | Working; evidence IDs needed |
+| Narrative profile | `data/input/Profiles/pr_profile.md` | Human narrative/legacy embedding input | Non-authoritative |
+| Review | `backend/review/`, `main.py` | Queue, labels, states, feedback, metrics | Working |
+| Discovery report | `backend/discovery_report.py` | Employer diversity and query health | Working |
+| Legacy embeddings | `backend/ai/` | MiniLM similarity and keyword scoring | Experimental; not trusted |
+| Fit specification | planned `backend/fit_spec/` | Draft, validate, diff, approve, activate | Sprint 1 |
+| Evidence library | profile/storage changes | Stable claim IDs and provenance | Sprint 1 |
+| Model gateway | planned `backend/ai/providers/` | Disabled/test/Ollama/optional adapters | Sprint 2 |
+| Job extraction | planned analysis service | Structured posting requirements/cues | Sprint 3 |
+| Facet retrieval | planned retrieval service | AI-independent shortlist | Sprint 3 |
+| Fit analysis | planned analysis service | Requirement/evidence comparison | Sprint 4 |
+| Application studio | planned application service/UI | Evidence plan and document packages | Sprint 5 |
+| Pipeline runner | planned command/service | Idempotent unattended workflow | Sprint 6 |
+| Windows scheduler | planned setup commands | Install/status/remove scheduled task | Sprint 6 |
+| Agent interface | documented CLI/JSON | Provider- and agent-independent operations | Sprint 8 |
 
-## Database components
+## Storage model
 
-The SQLite database currently contains four main tables:
+### Existing logical records
 
-| Table | Purpose |
+| Record | Purpose |
 |---|---|
-| `jobs` | Stores complete job postings, URLs, source IDs, timestamps, status, and source data |
-| `collection_runs` | Records when collection ran, how many jobs were found, and any source failures |
-| `job_eligibility_evaluations` | Stores profile-versioned decisions, reasons, evidence, and evaluation time |
-| `job_reviews` | Stores workflow state, match label, reason codes, notes, and review time |
+| `jobs` | Normalized job identity, content, links, status, and timestamps |
+| `job_discoveries` | Source/query provenance and independent lifecycle |
+| `collection_runs` and source results | Run health, counts, failures, and rate-limit metadata |
+| `job_eligibility_evaluations` | Profile-versioned hard-rule results and evidence |
+| `job_reviews` | Workflow state, label, reasons, notes, and feedback |
 
-Jobs are uniquely identified by:
+### Planned logical records
+
+| Record | Purpose |
+|---|---|
+| `candidate_evidence` | Stable evidence IDs, claim text, type, dates, source, provenance |
+| `fit_specifications` | Draft/approved/active versions and source versions |
+| `job_extractions` | Job-content-versioned structured requirements and cues |
+| `model_runs` | Task/provider/model/prompt/schema/input/output/error metadata |
+| `job_fit_analyses` | Requirement-to-evidence findings, gaps, risks, recommendation |
+| `application_packages` | Job/spec/evidence versions, approval state, revisions, manifest |
+| `pipeline_runs` | Step state, retries, durations, logs, and final status |
+
+Exact tables may be normalized differently during implementation, but these
+logical records and version links are required.
+
+## Provider contract
+
+All model tasks use the same envelope:
 
 ```text
-ATS source + source job ID
+task name and schema version
+input payload and input version/hash
+provider and model configuration
+prompt/template version
+validated structured result or explicit failure
+latency, retry count, and timestamp
 ```
 
-That prevents the same Greenhouse or Lever posting from being inserted repeatedly.
+Initial task types:
 
-## What happens to one job
+1. `propose_fit_spec`
+2. `extract_job_requirements`
+3. `analyze_job_fit`
+4. `draft_application_package`
 
-```mermaid
-flowchart LR
-    A["Raw ATS posting"] --> B["Standard job record"]
-    B --> C{"Already stored?"}
-    C -->|"No"| D["Create job"]
-    C -->|"Yes, changed"| E["Update job"]
-    C -->|"Yes, unchanged"| F["Refresh last seen"]
-```
+Ollama is the first live adapter. A deterministic adapter supplies repeatable
+tests, and a disabled adapter guarantees graceful degradation. Hosted adapters
+remain optional.
 
-The standardized job record includes:
+## Decision order
 
-```text
-source
-external_id
-title
-company
-location
-description
-canonical_url
-posted_at
-updated_at
-raw source data
-```
+1. Source prefilter limits obvious market noise.
+2. Deterministic eligibility returns `eligible`, `needs_review`, or `ineligible`.
+3. Hard-ineligible jobs stop; no later score can restore them.
+4. Facet retrieval selects a bounded set of reviewable jobs.
+5. Structured analysis maps requirements to stored evidence IDs.
+6. Ranking and explanations enter the review queue.
+7. Application drafting occurs only after Patrick selects a job.
 
-## Current decision flow
+## Failure behavior
 
-The next chunk sits between storage and ranking:
+| Failure | Required behavior |
+|---|---|
+| Job source unavailable | Record failure; never expire that source's jobs |
+| AI disabled/unavailable | Continue collection, eligibility, review, and export |
+| Invalid model JSON | Reject result; retry within bounds or mark for review |
+| Unknown evidence ID | Reject the claim/result |
+| Changed job posting | Preserve review; invalidate only content-derived analysis |
+| New fit-spec version | Preserve old results; reevaluate with explicit version linkage |
+| Interrupted pipeline | Resume safely without duplicating durable records |
 
-```mermaid
-flowchart TD
-    A["Stored jobs"] --> B["Eligibility filters"]
-    C["Structured candidate profile"] --> B
-    B --> D["Eligible jobs"]
-    B --> E["Rejected jobs with reasons"]
-    D --> F["Experimental matching"]
-    E --> G["Audit history"]
-```
+## Current next step
 
-This layer now provides:
-
-- Structured work history, skills, target roles, preferences, and exclusions.
-- Salary, location, remote-work, relocation, sales, and overtime filters.
-- A result for every job: `eligible`, `ineligible`, or `needs_review`.
-- Specific stored reasons such as “below salary floor” or “distance uncertain.”
-- Tests proving hard requirements cannot be overridden by semantic similarity.
-
-## Plain-language status
-
-The tool can reliably **discover across employers, collect preferred company
-boards, remember postings, screen them, and present a diverse queue for
-review**. The August 13 live validation passed every documented discovery check.
-The next useful evidence is Patrick's labels on approximately 20–30 real jobs.
-
-## Planned end-state workflow
-
-```mermaid
-flowchart TD
-    A["Scheduled collection"] --> B["Normalize and deduplicate"]
-    B --> C["Hard eligibility filters"]
-    C --> D["Fast local retrieval"]
-    D --> E["Top candidates"]
-    E --> F["Ollama requirement analysis"]
-    F --> G["Ranked review queue"]
-    G --> H["User feedback"]
-    H --> I["Evaluation and tuning"]
-```
+Complete the real-job baseline while implementing Sprint 1's evidence IDs and
+Job Fit Specification. See `DEVELOPMENT_SPRINTS.md` for tickets, dependencies,
+and acceptance criteria.

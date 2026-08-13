@@ -1,10 +1,16 @@
 # JobIntel
 
-JobIntel is a local-first job collection and matching system. It collects full
-job records from public applicant-tracking-system feeds, preserves them in
-SQLite, and ranks them against a local career profile. The long-term design uses
-Ollama only for detailed analysis of a small shortlist; routine collection and
-deduplication do not require an LLM.
+JobIntel is a local-first, agent-independent job intelligence and application
+preparation system. It converts career evidence, requirements, preferences, and
+organization-fit signals into an approved Job Fit Specification; hunts for
+suitable jobs; explains fit with traceable evidence; and prepares application
+drafts for selected jobs.
+
+The durable product is the local application, SQLite data, schemas, files, and
+CLI—not ChatGPT or any particular model. Collection, hard-rule screening, review,
+scheduling, and export are designed to work without AI. Intelligent analysis and
+drafting use replaceable providers; Ollama is the first planned live provider,
+while hosted services remain optional.
 
 ## Current status
 
@@ -27,14 +33,16 @@ The reliable collection foundation is complete:
 
 The structured profile and first deterministic eligibility layer are now in
 place. Hard rejections run before semantic ranking and cannot be overridden by
-an embedding score. Semantic ranking remains experimental until it is tuned
-against Patrick's labeled review decisions.
+an embedding or model score. Semantic ranking remains experimental until it is
+tuned against Patrick's labeled review decisions.
 
-The prepopulated profile is stored at
+The authoritative prepopulated profile is stored at
 `data/input/Profiles/patrick_profile.json`. Known facts and rules are active;
 all six initial policy choices are resolved in profile version `2026-08-12.2`.
 Missing salary is provisionally eligible; unclear locations and ambiguous
 contract or credential requirements produce `needs_review` rather than guesses.
+The Markdown `pr_profile.md` remains a human narrative and legacy embedding
+input; it is not the source of hard search policy.
 
 ## Project reference documents
 
@@ -47,6 +55,18 @@ contract or credential requirements produce `needs_review` rather than guesses.
   components, data flow, Mermaid diagrams, and planned end-state architecture.
 - [`BUILD_ROADMAP.md`](BUILD_ROADMAP.md): completed work and implementation
   sequence.
+- [`docs/DEVELOPMENT_SPRINTS.md`](docs/DEVELOPMENT_SPRINTS.md): executable sprint
+  backlog, dependencies, acceptance criteria, and next tickets.
+
+## Design guarantees
+
+- Local SQLite/files remain the system of record.
+- Hard eligibility works with AI disabled and cannot be overridden by AI.
+- AI tasks use validated JSON contracts and configurable providers.
+- Candidate claims in analysis or application drafts must cite stored evidence.
+- Invalid model output is rejected rather than silently accepted.
+- Patrick approves fit-spec versions and application packages.
+- Automatic application submission is not currently in scope.
 
 ## Setup
 
@@ -76,8 +96,8 @@ dashboard to inspect board health or enable and disable sources without editing
 JSON. Disabled source changes take effect on the next collection run.
 
 Runtime settings live in `config/settings.json`. The dashboard port, collection
-schedule, embedding model, and future Ollama URL/model/context are centralized
-there. Environment variables such as `JOBINTEL_PORT`,
+schedule, embedding model, and future provider/Ollama configuration are
+centralized there. Environment variables such as `JOBINTEL_PORT`,
 `JOBINTEL_EMBEDDING_MODEL`, and `JOBINTEL_OLLAMA_MODEL` override the file.
 
 ## Commands
@@ -184,6 +204,11 @@ active jobs across 35 employers and 56 visible reviewable jobs. A consecutive
 run created no duplicates and preserved review history. The next target-machine
 step is to run collection and `backend.discovery_report` against Patrick's
 persistent database, then label approximately 20–30 jobs before matching work.
+
+The next coding work is Sprint 1: add stable career-evidence IDs and a versioned,
+user-approved Job Fit Specification. The provider gateway and Ollama adapter
+follow in Sprint 2; job understanding and fit analysis follow only after the
+baseline and durable schemas exist.
 
 See [`BUILD_ROADMAP.md`](BUILD_ROADMAP.md) for the revised implementation
 sequence and [`docs/PROFILE_REVIEW.md`](docs/PROFILE_REVIEW.md) for the resolved

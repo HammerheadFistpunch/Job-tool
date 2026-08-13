@@ -1,86 +1,96 @@
-# READ FIRST — Job Job Development Handoff
+# READ FIRST — JobIntel Development Handoff
 
-This file is the source-of-truth pickup point for the next development session.
-Read it before changing code. Then read `jobintel/BUILD_ROADMAP.md` for the
-full implementation sequence.
+This is the authoritative pickup point for the next development session. Read
+this file, then `jobintel/BUILD_ROADMAP.md` and
+`jobintel/docs/DEVELOPMENT_SPRINTS.md` before changing code.
+
+## Product mission
+
+JobIntel is a local-first, agent-independent job intelligence and application
+preparation system. It must:
+
+1. Turn Patrick's work history, requirements, preferences, and organization-fit
+   signals into a versioned, user-approved Job Fit Specification.
+2. Search repeatedly for suitable remote-US and Sandy/Salt Lake-area jobs.
+3. Apply deterministic eligibility rules before any model scoring.
+4. Use replaceable AI providers to understand postings and compare requirements
+   with stored career evidence.
+5. Prepare evidence-grounded application documents for jobs Patrick selects.
+6. Keep collection, storage, review, scheduling, and document history useful
+   without ChatGPT Premium or any paid model.
+
+## Non-negotiable architecture
+
+- The application, data, prompts, schemas, CLI commands, and workflow state live
+  in this repository and local SQLite/files—not in a particular chat or agent.
+- Collection, normalization, deduplication, deterministic eligibility, review,
+  scheduling, and export must work with AI disabled.
+- AI features use provider-neutral structured contracts. Ollama is the first
+  supported runtime; hosted providers are optional adapters, never dependencies.
+- A hard eligibility failure cannot be overridden by embeddings or an LLM.
+- Model output is untrusted until schema validation succeeds. Unsupported career
+  claims must be rejected unless they cite stored evidence IDs.
+- Missing or ambiguous eligibility data normally produces `needs_review`, not a
+  guessed rejection.
+- Application documents are drafts requiring Patrick's approval. Automatic
+  application submission is outside the current roadmap.
+- Schema migrations must preserve jobs, source provenance, reviews, analyses,
+  applications, and Patrick's feedback.
 
 ## Verified repository state
 
 - Repository: `HammerheadFistpunch/Job-tool`
-- Working branch: `GPT_Redesign`
-- Last verified functional commit before this handoff: `96e4a9425960f993da044b6170799e0c99145eb0`
+- Authoritative integration branch: `GPT_Redesign`
+- Verified remote baseline: `f6135a82134321c1842251be49a9cfaf23b7a4bc`
 - Local application folder: `jobintel`
 - Candidate profile version: `2026-08-12.2`
 - Target platform: Windows 11, Python 3.12.8, local SQLite, local Ollama
 
-At the start of the next session, fetch the latest remote `GPT_Redesign` branch
-and treat it as authoritative. Do not assume the commit above is still current.
+Always fetch `origin/GPT_Redesign` before implementation and treat the remote
+branch as authoritative. Do not assume the baseline SHA is still current.
 
-## Current outcome
+## What works now
 
-Job Job can reliably collect complete postings from configured Greenhouse and
-Lever company boards, normalize and deduplicate them, preserve changes in
-SQLite, apply explainable eligibility rules, and display the results in a local
-review dashboard.
+- Query-based Jobicy discovery plus configured Greenhouse and Lever boards.
+- Complete normalized postings, canonical links, source/query attribution,
+  cross-provider deduplication, change detection, and safe expiration.
+- SQLite persistence and collection/source health history.
+- Versioned structured profile and explainable deterministic eligibility.
+- Local FastAPI review queue with states, labels, reasons, notes, and evidence.
+- Review metrics, policy fixture, diagnostics, and Windows launchers.
+- A diversity-capped queue that does not delete jobs or hide reviewed records.
+- Latest isolated validation: 51 passing tests; 107 active jobs across 35
+  employers; 56 visible reviewable jobs across 29 employers; largest employer
+  share 17.86%; a second run created no duplicates and preserved review state.
 
-Query-based broad discovery is implemented through Jobicy's public remote-jobs
-API alongside the direct ATS boards. A clean live validation on August 13, 2026
-produced 107 distinct active jobs across 35 employers. The diversity-capped
-review queue contained 56 eligible or needs-review jobs across 29 employers;
-the largest employer represented 17.86%. All documented discovery acceptance
-checks passed.
+## Important gaps
 
-## What is working
-
-- Greenhouse and Lever public ATS collection with retries and visible errors.
-- Complete posting descriptions, links, source IDs, locations, and dates.
-- SQLite persistence, source-aware deduplication, and posting change detection.
-- Source-scoped expiration after a successful board fetch; failures cannot
-  falsely close that board's jobs.
-- A 20-employer registry with 14 live-verified boards enabled.
-- Role/location prefiltering before storage.
-- Per-board fetched, accepted, filtered, expired, and failure reporting.
-- Dashboard source-health display and enable/disable controls.
-- Versioned structured candidate profile with all initial choices resolved.
-- Explainable `eligible`, `needs_review`, and `ineligible` decisions.
-- Local FastAPI review queue with states, labels, reasons, notes, and job links.
-- Review metrics API and a reproducible policy fixture.
-- Windows setup, launch, and diagnostic scripts.
-- Target-machine diagnostics: database, packages, and Ollama all reachable.
-- Prior direct-board validation: 44 tests passed; a live smoke run completed all
-  14 enabled boards with no errors and retained 76 prefiltered postings.
-- Jobicy query discovery for technical marketing, product marketing, strategic
-  communications, content strategy, creative/video, and Utah-area monitoring.
-- Query-scoped attribution, health/count reporting, and safe expiration across
-  overlapping providers.
-- Cross-provider deduplication that preserves distinct same-provider openings.
-- Configurable review-queue diversity cap that never deletes jobs or hides
-  already-reviewed records.
-- `python -m backend.discovery_report` acceptance report.
-- Latest validation: 51 tests passed. Two consecutive live runs produced 107
-  active jobs; the second run reported 0 new, 0 updated, and 134 unchanged
-  discoveries while preserving a saved review marker.
-
-## Known limitations
-
-- The no-key broad provider is remote-focused. Its Utah-scoped query is recorded
-  but returned zero local matches in the latest live run; a true local-market
-  provider remains desirable later.
-- The semantic embedding score remains experimental.
-- Facet-based retrieval and long-description chunking are not built.
-- Ollama reranking is not built or enabled.
-- Background scheduling, notifications, backups, and a finished Windows
-  installer are not built.
-- Six candidate employer tokens are disabled after confirmed 404 responses;
-  those employers may use different ATS products or private career APIs.
+- The current profile is structured but is not yet a generated, reviewable Job
+  Fit Specification with stable provenance.
+- Career achievements do not yet have stable evidence IDs suitable for citation.
+- Facet retrieval, long-description chunking, requirement extraction, and
+  evidence-grounded fit analysis are not built.
+- There is no provider-neutral model gateway or working Ollama analysis path.
+- Personality and preferred organization traits are stored but not assessed.
+- Application package generation and application document history are not built.
+- Background scheduling, durable run logs, backups, and failure notification are
+  not installed.
+- The no-key broad source remains remote-focused and produced no Utah-local jobs
+  in the last validation.
 
 ## Immediate next milestone
 
-Run the new discovery build on Patrick's Windows database, confirm the generated
-acceptance report, then have Patrick label approximately 20–30 jobs from the
-diverse queue. Use those labels to establish precision at 10, hard-reject
-leakage, coverage, and reason-frequency baselines before changing semantic
-weights or beginning Ollama benchmarking.
+Establish the evaluation baseline before tuning matching:
+
+1. Run collection and the discovery report against Patrick's persistent Windows
+   database.
+2. Label approximately 20–30 jobs from the diverse queue.
+3. Record precision at 10, hard-reject leakage, coverage, and reason frequency.
+4. Freeze those labels as the initial real-job regression dataset.
+
+In parallel with user labeling, Sprint 1 may begin on evidence IDs, the Job Fit
+Specification schema, and migration-safe storage because those changes do not
+depend on score tuning.
 
 ## Restart procedure
 
@@ -97,30 +107,17 @@ cd jobintel
 .venv\Scripts\python.exe -m backend.discovery_report
 ```
 
-Before implementation, inspect:
+Then inspect:
 
-- `READ_FIRST.md`
 - `jobintel/BUILD_ROADMAP.md`
-- `jobintel/config/job_sources.json`
-- `jobintel/backend/jobs/job_aggregator.py`
-- `jobintel/backend/jobs/prefilter.py`
-- `jobintel/backend/storage/job_store.py`
+- `jobintel/docs/DEVELOPMENT_SPRINTS.md`
 - `jobintel/docs/JOB_TOOL_FUNCTION_MAP.md`
-
-## Important design constraints
-
-- Collection and deterministic eligibility must continue working without
-  embeddings or Ollama.
-- Missing or ambiguous eligibility data should normally produce
-  `needs_review`, not a guessed rejection.
-- Hard eligibility failures cannot be overridden by semantic or LLM scores.
-- Never expire jobs because an external source failed.
-- Keep all model and provider selections configurable rather than hard-coded.
-- Store analysis model and prompt versions so results can be reproduced.
-- Preserve existing jobs and Patrick's review history during schema upgrades.
+- `jobintel/data/input/Profiles/patrick_profile.json`
+- `jobintel/config/job_sources.json`
+- `jobintel/config/settings.json`
 
 ## Next user checkpoint
 
-Patrick can now run collection and the discovery report on the target machine.
-If the report passes against his persistent database, review approximately
-20–30 jobs in the dashboard. Do not tune ranking until those labels exist.
+Patrick's next hands-on task is to label 20–30 diverse jobs. The next coding
+sprint is Sprint 1, Candidate Intelligence Foundation. Do not tune ranking or
+choose a local model based on intuition before the labeled baseline exists.
